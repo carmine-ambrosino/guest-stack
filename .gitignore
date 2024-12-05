@@ -1,0 +1,16 @@
+# Ignore venv
+*.venv
+
+# Ignore .idea
+*.idea
+
+#ignore .vscode
+*.vscode
+
+# Ignore pycache
+app/__pycache__
+
+# Ignore DS_Store file
+*.DS_Store
+# Ignore desktop.ini
+*desktop.ini
