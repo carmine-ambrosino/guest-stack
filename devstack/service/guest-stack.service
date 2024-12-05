@@ -1,0 +1,14 @@
+[Unit]
+Description=Guest-Stack Plugin for openstack 
+After=network.target
+
+[Service]
+User=stack
+Type=simple
+WorkingDirectory=/opt/stack/guest-stack/app
+ExecStart=/opt/stack/guest-stack/app/.venv/bin/python3 /opt/stack/guest-stack/app/app.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+

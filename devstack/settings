@@ -1,0 +1,9 @@
+# settings openstack
+enable_service guest-stack
+
+# used directories
+PLUGIN_DIR=$DEST/guest-stack
+APP_DIR=$PLUGIN_DIR/app
+DEVSTACK_DIR=$PLUGIN_DIR/devstack
+SERVICE_DIR=$DEVSTACK_DIR/service
+SYSTEMD_DIR=/etc/systemd/system
