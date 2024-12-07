@@ -1,4 +1,6 @@
 import re
+import secrets
+import string
 from datetime import datetime, timezone
 from openstack_client import get_keystone_client
 from db import get_db_connection
@@ -28,19 +30,25 @@ class UserManager:
         except ValueError:
             raise ValueError("Invalid expiry_time format. Must be ISO 8601.")
 
+    @staticmethod
+    def generate_random_password(length=20):
+        characters = string.ascii_letters + string.digits + string.punctuation
+        return ''.join(secrets.choice(characters) for _ in range(length))
+
     def create_user(self, username, expiry_time, email, project, role):
         self.validate_username(username)
         self.validate_email(email)
         self.validate_expiry_time(expiry_time)
 
         expiry_time_utc = datetime.fromisoformat(expiry_time).astimezone(timezone.utc)
+        password = self.generate_random_password()
 
         try:
             project_obj = self.keystone.projects.find(name=project)
             role_obj = self.keystone.roles.find(name=role)
             user = self.keystone.users.create(
                 name=username,
-                password="temporary_password",
+                password=password,
                 email=email,
                 description=f"Temporary user expiring on {expiry_time_utc.isoformat()}",
                 enabled=True,
@@ -57,6 +65,9 @@ class UserManager:
                     (username, expiry_time_utc.isoformat(), email, user.id, project_obj.id, role),
                 )
                 conn.commit()
+
+            # Stampare la password generata durante i test
+            print(f"Generated password for user {username}: {password}")
 
             return {"message": "User created", "user": user.to_dict()}, 201
         except Exception as e:
