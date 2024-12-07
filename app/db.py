@@ -1,28 +1,27 @@
 import sqlite3
-from contextlib import contextmanager
+from config import Config
 
-DB_PATH = 'users.db'
-
-@contextmanager
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH, timeout=30)  # Timeout per evitare deadlock
+    conn = sqlite3.connect(Config.DATABASE_URI)
     conn.row_factory = sqlite3.Row
-    try:
-        # Modalità WAL per migliorare la concorrenza
-        conn.execute("PRAGMA journal_mode=WAL")
-        yield conn
-    finally:
-        conn.close()
+    return conn
 
-# Funzione per inizializzare il database
 def initialize_database():
-    try:
-        with get_db_connection() as conn:
-            with open('schema.sql', 'r') as f:
-                schema = f.read()
-                conn.executescript(schema)
-                print("Database initialized successfully.")
-    except sqlite3.OperationalError as e:
-        print(f"Database initialization error: {e}")
-    except FileNotFoundError:
-        print("Schema file 'schema.sql' not found.")
+    """
+    Inizializza il database, creando la tabella `temporary_users` se non esiste già.
+    """
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS temporary_users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                expiry_time TEXT NOT NULL,
+                email TEXT NOT NULL,
+                openstack_user_id TEXT NOT NULL UNIQUE,
+                project_id TEXT NOT NULL,
+                role TEXT NOT NULL
+            )
+        """)
+        conn.commit()
+        print("Database initialized successfully.")

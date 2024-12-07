@@ -1,10 +1,13 @@
-# openstack_client.py
-from keystoneclient.v3 import client as keystone_client
-from keystoneauth1 import session
-from keystoneauth1.identity import v3
+from keystoneauth1 import loading, session
+from keystoneclient.v3 import client
 
-def get_keystone_session(auth_url, username, password, user_domain_name, project_name, project_domain_name):
-    auth = v3.Password(
+
+def get_keystone_client(auth_url, username, password, user_domain_name, project_name, project_domain_name):
+    """
+    Ottiene un'istanza del client Keystone configurata con le credenziali fornite.
+    """
+    loader = loading.get_plugin_loader('password')
+    auth = loader.load_from_options(
         auth_url=auth_url,
         username=username,
         password=password,
@@ -12,8 +15,5 @@ def get_keystone_session(auth_url, username, password, user_domain_name, project
         project_name=project_name,
         project_domain_name=project_domain_name
     )
-    return session.Session(auth=auth)
-
-def get_keystone_client(auth_url, username, password, user_domain_name, project_name, project_domain_name):
-    sess = get_keystone_session(auth_url, username, password, user_domain_name, project_name, project_domain_name)
-    return keystone_client.Client(session=sess)
+    sess = session.Session(auth=auth)
+    return client.Client(session=sess)

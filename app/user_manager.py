@@ -1,156 +1,189 @@
-# user_manager.py
+import re
 from datetime import datetime, timezone
 from openstack_client import get_keystone_client
 from db import get_db_connection
 
-# Configurazioni OpenStack
-AUTH_URL = 'http://192.168.122.134/identity'
-USERNAME = 'admin'
-PASSWORD = 'nomoresecret'
-USER_DOMAIN_NAME = 'default'
-PROJECT_NAME = 'admin'
-PROJECT_DOMAIN_NAME = 'default'
+class UserManager:
+    EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$")
 
-keystone = get_keystone_client(AUTH_URL, USERNAME, PASSWORD, USER_DOMAIN_NAME, PROJECT_NAME, PROJECT_DOMAIN_NAME)
-
-
-def create_user(username, expiry_time, email, project_name, role_name):
-    expiry_time_utc = datetime.fromisoformat(expiry_time).astimezone(timezone.utc)
-
-    # Verifica che il progetto esista
-    try:
-        project = keystone.projects.find(name=project_name)
-    except Exception:
-        return {"error": f"Project '{project_name}' not found"}, 400
-
-    # Verifica che il ruolo esista
-    try:
-        role = keystone.roles.find(name=role_name)
-    except Exception:
-        return {"error": f"Role '{role_name}' not found"}, 400
-
-    # Crea l'utente in OpenStack
-    try:
-        user = keystone.users.create(
-            name=username,
-            password='temporary_password',
-            email=email,
-            description=f'Temporary user expiring on {expiry_time_utc.isoformat()}',
-            enabled=True
+    def __init__(self, auth_url, username, password, user_domain_name, project_name, project_domain_name):
+        self.keystone = get_keystone_client(
+            auth_url, username, password, user_domain_name, project_name, project_domain_name
         )
-    except Exception as e:
-        return {"error": f"Error creating user in OpenStack: {str(e)}"}, 500
 
-    # Assegna il progetto e il ruolo all'utente
-    try:
-        keystone.roles.grant(role=role, user=user, project=project)
-    except Exception as e:
-        # Se il ruolo o il progetto non possono essere assegnati, restituiamo un errore
-        return {"error": f"Error assigning project or role: {str(e)}"}, 500
+    @staticmethod
+    def validate_email(email):
+        if not UserManager.EMAIL_REGEX.match(email):
+            raise ValueError("Invalid email format")
 
-    # Memorizza l'utente nel database
-    with get_db_connection() as conn:
+    @staticmethod
+    def validate_username(username):
+        if not username or len(username) < 3:
+            raise ValueError("Username must be at least 3 characters long")
+
+    @staticmethod
+    def validate_expiry_time(expiry_time):
+        try:
+            datetime.fromisoformat(expiry_time)
+        except ValueError:
+            raise ValueError("Invalid expiry_time format. Must be ISO 8601.")
+
+    def create_user(self, username, expiry_time, email, project, role):
+        self.validate_username(username)
+        self.validate_email(email)
+        self.validate_expiry_time(expiry_time)
+
+        expiry_time_utc = datetime.fromisoformat(expiry_time).astimezone(timezone.utc)
+
+        try:
+            project_obj = self.keystone.projects.find(name=project)
+            role_obj = self.keystone.roles.find(name=role)
+            user = self.keystone.users.create(
+                name=username,
+                password="temporary_password",
+                email=email,
+                description=f"Temporary user expiring on {expiry_time_utc.isoformat()}",
+                enabled=True,
+            )
+            self.keystone.roles.grant(role=role_obj, user=user, project=project_obj)
+
+            with get_db_connection() as conn:
+                conn.execute(
+                    """
+                    INSERT INTO temporary_users 
+                    (username, expiry_time, email, openstack_user_id, project_id, role) 
+                    VALUES (?, ?, ?, ?, ?, ?)
+                    """,
+                    (username, expiry_time_utc.isoformat(), email, user.id, project_obj.id, role),
+                )
+                conn.commit()
+
+            return {"message": "User created", "user": user.to_dict()}, 201
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+    def update_user(self, user_id, **fields):
+        """
+        Aggiorna dinamicamente uno o più campi di un utente (email, progetto, ruolo, expiry_time).
+        """
+        if "username" in fields:
+            return {"error": "Username cannot be updated"}, 400
+
+        with get_db_connection() as conn:
+            user = conn.execute(
+                "SELECT * FROM temporary_users WHERE openstack_user_id = ?",
+                (user_id,)
+            ).fetchone()
+
+            if not user:
+                return {"error": "User not found in the database"}, 404
+
+            update_operations = {
+                "email": lambda value: self._update_email(conn, user_id, value),
+                "project": lambda value: self._update_project(conn, user_id, value),
+                "role": lambda value: self._update_role(conn, user_id, value, user["project_id"]),
+                "expiry_time": lambda value: self._update_expiry_time(conn, user_id, value)
+            }
+
+            updated_fields = []
+            for field, value in fields.items():
+                try:
+                    if field == "email":
+                        self.validate_email(value)
+                    if field == "expiry_time":
+                        self.validate_expiry_time(value)
+                    update_operations[field](value)
+                    updated_fields.append(field)
+                except Exception as e:
+                    return {"error": f"Failed to update {field}: {str(e)}"}, 400
+
+            if updated_fields:
+                conn.commit()
+                return {"message": f"User updated successfully. Fields updated: {', '.join(updated_fields)}"}, 200
+
+            return {"error": "No valid fields provided for update"}, 400
+
+    def _update_email(self, conn, user_id, email):
         conn.execute(
-            """
-            INSERT INTO temporary_users 
-            (username, expiry_time, email, openstack_user_id, project_id, role) 
-            VALUES (?, ?, ?, ?, ?, ?)
-            """,
-            (username, expiry_time_utc.isoformat(), email, user.id, project.id, role_name)
+            "UPDATE temporary_users SET email = ? WHERE openstack_user_id = ?",
+            (email, user_id)
         )
-        conn.commit()
 
-    return {
-        "message": "User created",
-        "user": {
-            "username": username,
-            "email": email,
-            "expiry_time": expiry_time,
-            "project": project_name,
-            "role": role_name,
-            "openstack_user_id": user.id
-        }
-    }, 201
+        user = self.keystone.users.get(user_id)
+        self.keystone.users.update(user, email=email)
 
+    def _update_project(self, conn, user_id, project_name):
+        try:
+            project = self.keystone.projects.find(name=project_name)
+        except Exception:
+            raise ValueError(f"Project '{project_name}' not found")
 
-def get_active_users():
-    now = datetime.now(timezone.utc)
-    with get_db_connection() as conn:
-        return conn.execute(
-            """
-            SELECT * FROM temporary_users 
-            WHERE expiry_time > ?
-            """,
-            (now.isoformat(),)
-        ).fetchall()
+        conn.execute(
+            "UPDATE temporary_users SET project_id = ? WHERE openstack_user_id = ?",
+            (project.id, user_id)
+        )
 
-
-def update_user(user_id, new_expiry_time=None, email=None, project_name=None, role_name=None):
-    with get_db_connection() as conn:
-        # Recupera l'utente dal database
-        user = conn.execute(
-            "SELECT * FROM temporary_users WHERE openstack_user_id = ?",
+        user = self.keystone.users.get(user_id)
+        current_project_id = conn.execute(
+            "SELECT project_id FROM temporary_users WHERE openstack_user_id = ?",
             (user_id,)
-        ).fetchone()
-        if not user:
-            return {"error": "User not found in the database"}, 404
+        ).fetchone()[0]
 
-        update_fields = {}
+        if current_project_id:
+            current_project = self.keystone.projects.get(current_project_id)
+            current_roles = self.keystone.roles.list(user=user, project=current_project)
 
-        # Aggiorna expiry_time
-        if new_expiry_time:
-            expiry_time_utc = datetime.fromisoformat(new_expiry_time).astimezone(timezone.utc)
-            update_fields['description'] = f"Updated expiry time to {expiry_time_utc.isoformat()}"
-            conn.execute(
-                "UPDATE temporary_users SET expiry_time = ? WHERE openstack_user_id = ?",
-                (expiry_time_utc.isoformat(), user_id)
-            )
+            for role in current_roles:
+                self.keystone.roles.revoke(role=role, user=user, project=current_project)
 
-        # Aggiorna email
-        if email:
-            update_fields['email'] = email
-            conn.execute(
-                "UPDATE temporary_users SET email = ? WHERE openstack_user_id = ?",
-                (email, user_id)
-            )
+        role_obj = self.keystone.roles.find(name=conn.execute(
+            "SELECT role FROM temporary_users WHERE openstack_user_id = ?",
+            (user_id,)
+        ).fetchone()[0])
 
-        # Aggiorna progetto
-        if project_name:
-            try:
-                project = keystone.projects.find(name=project_name)
-            except Exception:
-                return {"error": f"Project '{project_name}' not found"}, 400
-            conn.execute(
-                "UPDATE temporary_users SET project_id = ? WHERE openstack_user_id = ?",
-                (project.id, user_id)
-            )
+        self.keystone.roles.grant(role=role_obj, user=user, project=project)
 
-        # Aggiorna ruolo
-        if role_name:
-            try:
-                role = keystone.roles.find(name=role_name)
-            except Exception:
-                return {"error": f"Role '{role_name}' not found"}, 400
-            # Assegna il ruolo all'utente
-            keystone.roles.grant(role=role, user=user_id, project=user['project_id'])
-            conn.execute(
-                "UPDATE temporary_users SET role = ? WHERE openstack_user_id = ?",
-                (role_name, user_id)
-            )
+    def _update_role(self, conn, user_id, role_name, project_id):
+        try:
+            role = self.keystone.roles.find(name=role_name)
+        except Exception:
+            raise ValueError(f"Role '{role_name}' not found")
 
-        # Aggiorna utente in OpenStack
-        if update_fields:
-            keystone.users.update(user_id, **update_fields)
+        conn.execute(
+            "UPDATE temporary_users SET role = ? WHERE openstack_user_id = ?",
+            (role_name, user_id)
+        )
 
-        conn.commit()
-        return {"message": "User updated"}, 200
-        
+        user = self.keystone.users.get(user_id)
+        project = self.keystone.projects.get(project_id)
 
-def delete_user(user_id):
-    try:
-        # Elimina utente da OpenStack
-        keystone.users.delete(user_id)
-        print(f"Successfully deleted user from OpenStack: {user_id}")
-    except Exception as e:
-        print(f"Failed to delete user from OpenStack: {user_id}. Error: {e}")
-        raise  # Propaga l'eccezione per la gestione nel chiamante
+        for current_role in self.keystone.roles.list(user=user, project=project):
+            self.keystone.roles.revoke(role=current_role, user=user, project=project)
+        self.keystone.roles.grant(role=role, user=user, project=project)
+
+    def _update_expiry_time(self, conn, user_id, expiry_time):
+        expiry_time_utc = datetime.fromisoformat(expiry_time).astimezone(timezone.utc)
+
+        conn.execute(
+            "UPDATE temporary_users SET expiry_time = ? WHERE openstack_user_id = ?",
+            (expiry_time_utc.isoformat(), user_id)
+        )
+
+        user = self.keystone.users.get(user_id)
+        self.keystone.users.update(
+            user, description=f"Temporary user expiring on {expiry_time_utc.isoformat()}"
+        )
+
+    def get_temp_users(self):
+        with get_db_connection() as conn:
+            users = conn.execute("SELECT * FROM temporary_users").fetchall()
+        return [dict(user) for user in users]
+
+    def delete_user(self, user_id):
+        try:
+            self.keystone.users.delete(user_id)
+            with get_db_connection() as conn:
+                conn.execute("DELETE FROM temporary_users WHERE openstack_user_id = ?", (user_id,))
+                conn.commit()
+        except Exception as e:
+            raise Exception(f"Error deleting user: {e}")

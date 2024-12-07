@@ -1,8 +1,20 @@
-import os
-
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY", "mysecret")
-    OPENSTACK_CLOUD_NAME = os.environ.get("OPENSTACK_CLOUD_NAME", "devstack-admin")
-    OPENSTACK_CONFIG_FILE = os.environ.get("OPENSTACK_CONFIG_FILE", "./clouds.yaml")
-    SQLALCHEMY_DATABASE_URI = "sqlite:///temp_users.sqlite3"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Database configuration
+    DATABASE_URI = "temporary_users.db"
+
+    # OpenStack configuration
+    OPENSTACK = {
+        "auth_url": "http://192.168.122.134/identity",
+        "username": "admin",
+        "password": "nomoresecret",
+        "user_domain_name": "default",
+        "project_name": "admin",
+        "project_domain_name": "default",
+    }
+
+    # Application configuration
+    DEBUG = True
+    FLASK_PORT = 5000
+    FLASK_HOST = "0.0.0.0"
+    RELOADER = False
+    TIME_SCHED = 1

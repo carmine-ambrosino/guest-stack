@@ -1,20 +1,24 @@
 from datetime import datetime, timezone
+from user_manager import UserManager
 from db import get_db_connection
-from user_manager import delete_user
+from config import Config
+
+# Inizializza UserManager con la configurazione OpenStack
+user_manager = UserManager(**Config.OPENSTACK)
 
 def cleanup_expired_users():
-    now = datetime.now(timezone.utc)  # Usa UTC per coerenza
+    now = datetime.now(timezone.utc)
     print(f"Running cleanup at {now.isoformat()}")
 
     with get_db_connection() as conn:
-        # Seleziona solo gli utenti con expiry_time scaduto
+        # Recupera gli utenti scaduti
         expired_users = conn.execute(
             """
-            SELECT openstack_user_id, username, expiry_time 
+            SELECT openstack_user_id, username 
             FROM temporary_users 
             WHERE expiry_time <= ?
             """,
-            (now.isoformat(),)  # Confronta con l'orario corrente
+            (now.isoformat(),),
         ).fetchall()
 
         if not expired_users:
@@ -23,17 +27,20 @@ def cleanup_expired_users():
 
         for user in expired_users:
             try:
-                # Prova a rimuovere l'utente da OpenStack
-                delete_user(user['openstack_user_id'])
-                print(f"Deleted user from OpenStack: {user['username']} (ID: {user['openstack_user_id']})")
-                
-                # Rimuovi l'utente dal database solo se la rimozione in OpenStack ha avuto successo
+                # Elimina l'utente da OpenStack
+                user_manager.delete_user(user["openstack_user_id"])
+                print(f"Deleted user: {user['username']} (ID: {user['openstack_user_id']})")
+
+                # Rimuovi l'utente dal database
                 conn.execute(
                     "DELETE FROM temporary_users WHERE openstack_user_id = ?",
-                    (user['openstack_user_id'],)
+                    (user["openstack_user_id"],),
                 )
-                conn.commit()  # Salva le modifiche
+                conn.commit()
                 print(f"Deleted user from database: {user['username']} (ID: {user['openstack_user_id']})")
             except Exception as e:
-                # Gestione dell'errore per utenti non eliminati
                 print(f"Error deleting user {user['username']} (ID: {user['openstack_user_id']}): {e}")
+
+
+if __name__ == "__main__":
+    cleanup_expired_users()
