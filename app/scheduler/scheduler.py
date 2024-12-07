@@ -2,7 +2,7 @@ import schedule
 import time
 import logging
 from config import Config
-from cleanup import cleanup_expired_users
+from backend.cleanup import cleanup_expired_users
 
 def run_scheduler():
     """Funzione principale dello scheduler."""

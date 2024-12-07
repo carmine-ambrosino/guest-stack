@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
-from user_manager import UserManager
-from db import get_db_connection
+from backend.user_manager import UserManager
+from backend.db.db import get_db_connection
 from config import Config
 import logging
 

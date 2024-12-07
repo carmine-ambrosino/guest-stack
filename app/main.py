@@ -2,9 +2,9 @@ from multiprocessing import Process
 import signal
 import logging
 import sys
-from app import app
+from backend.app import app
 from config import Config
-from scheduler import run_scheduler
+from scheduler.scheduler import run_scheduler
 
 # Configura il logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")

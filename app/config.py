@@ -1,6 +1,6 @@
 class Config:
     # Database configuration
-    DATABASE_URI = "temporary_users.db"
+    DATABASE_URI = "backend/db/temporary_users.db"
 
     # OpenStack configuration
     OPENSTACK = {

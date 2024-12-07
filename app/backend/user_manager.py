@@ -3,8 +3,8 @@ import secrets
 import string
 import logging
 from datetime import datetime, timezone
-from openstack_client import get_keystone_client
-from db import get_db_connection
+from backend.openstack_client import get_keystone_client
+from backend.db.db import get_db_connection
 
 class UserManager:
     EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$")

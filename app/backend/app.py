@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from user_manager import UserManager
+from backend.user_manager import UserManager
 from config import Config
 
 app = Flask(__name__)
