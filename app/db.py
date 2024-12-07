@@ -14,8 +14,15 @@ def get_db_connection():
     finally:
         conn.close()
 
-# Inizializza il database
+# Funzione per inizializzare il database
 def initialize_database():
-    with get_db_connection() as conn:
-        with open('schema.sql') as f:
-            conn.executescript(f.read())
+    try:
+        with get_db_connection() as conn:
+            with open('schema.sql', 'r') as f:
+                schema = f.read()
+                conn.executescript(schema)
+                print("Database initialized successfully.")
+    except sqlite3.OperationalError as e:
+        print(f"Database initialization error: {e}")
+    except FileNotFoundError:
+        print("Schema file 'schema.sql' not found.")
