@@ -13,7 +13,7 @@ class Config:
     }
 
     # Application configuration
-    DEBUG = True
+    DEBUG = False
     FLASK_PORT = 5000
     FLASK_HOST = "0.0.0.0"
     RELOADER = False

@@ -1,6 +1,7 @@
 import re
 import secrets
 import string
+import logging
 from datetime import datetime, timezone
 from openstack_client import get_keystone_client
 from db import get_db_connection
@@ -67,7 +68,7 @@ class UserManager:
                 conn.commit()
 
             # Stampare la password generata durante i test
-            print(f"Generated password for user {username}: {password}")
+            logging.info(f"Generated password for user {username}: {password}")
 
             return {"message": "User created", "user": user.to_dict()}, 201
         except Exception as e:
