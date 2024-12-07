@@ -9,4 +9,4 @@ def run_scheduler():
     schedule.every(Config.TIME_SCHED).minutes.do(cleanup_expired_users)
     while True:
         schedule.run_pending()
-        time.sleep(Config.TIME_SCHED)
+        time.sleep(1)
