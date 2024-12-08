@@ -20,6 +20,7 @@ def initialize_database():
                 email TEXT NOT NULL,
                 openstack_user_id TEXT NOT NULL UNIQUE,
                 project_id TEXT NOT NULL,
+                project_name TEXT NOT NULL,
                 role TEXT NOT NULL
             )
         """)

@@ -60,10 +60,10 @@ class UserManager:
                 conn.execute(
                     """
                     INSERT INTO temporary_users 
-                    (username, expiry_time, email, openstack_user_id, project_id, role) 
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    (username, expiry_time, email, openstack_user_id, project_id, project_name, role) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                     """,
-                    (username, expiry_time_utc.isoformat(), email, user.id, project_obj.id, role),
+                    (username, expiry_time_utc.isoformat(), email, user.id, project_obj.id, project_obj.name, role),
                 )
                 conn.commit()
 
@@ -131,8 +131,8 @@ class UserManager:
             raise ValueError(f"Project '{project_name}' not found")
 
         conn.execute(
-            "UPDATE temporary_users SET project_id = ? WHERE openstack_user_id = ?",
-            (project.id, user_id)
+            "UPDATE temporary_users SET project_id = ?, project_name = ? WHERE openstack_user_id = ?",
+            (project.id, project_name, user_id)
         )
 
         user = self.keystone.users.get(user_id)
