@@ -70,7 +70,7 @@ class UserManager:
             # Stampare la password generata durante i test
             logging.info(f"Generated password for user {username}: {password}")
 
-            return {"message": "User created", "user": user.to_dict()}, 201
+            return {"message": "User created", "openstack_id": user.id }, 201
         except Exception as e:
             return {"error": str(e)}, 500
 

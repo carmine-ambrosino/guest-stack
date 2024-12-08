@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from backend.user_manager import UserManager
+from datetime import datetime
 from config import Config
 
 user_manager = UserManager(**Config.OPENSTACK)
@@ -39,7 +40,23 @@ def update_user_api(user_id):
 @users_bp.route('/users', methods=['GET'])
 def get_users_api():
     users = user_manager.get_temp_users()
-    return jsonify(users), 200
+
+    # Generate Stats
+    today = datetime.now().date()
+    expiring_soon = sum(1 for user in users if datetime.fromisoformat(user['expiry_time'].replace("Z", "+00:00")).date() == today)
+    expired = sum(1 for user in users if datetime.fromisoformat(user['expiry_time'].replace("Z", "+00:00")).date() < today)
+
+    # Create response
+    response = {
+        "users": users,
+        "stats": {
+            "users": len(users),
+            "expiring_soon": expiring_soon,
+            "expired": expired
+        }
+    }
+
+    return jsonify(response), 200
 
 
 @users_bp.route('/users/<user_id>', methods=['DELETE'])
