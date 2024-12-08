@@ -40,13 +40,22 @@ def update_user_api(user_id):
 @users_bp.route('/users', methods=['GET'])
 def get_users_api():
     users = user_manager.get_temp_users()
-
-    # Generate Stats
     today = datetime.now().date()
-    expiring_soon = sum(1 for user in users if datetime.fromisoformat(user['expiry_time'].replace("Z", "+00:00")).date() == today)
-    expired = sum(1 for user in users if datetime.fromisoformat(user['expiry_time'].replace("Z", "+00:00")).date() < today)
 
-    # Create response
+    # Add 'status' for each users
+    for user in users:
+        expiry_date = datetime.fromisoformat(user['expiry_time'].replace("Z", "+00:00")).date()
+        user['status'] = (
+            'expiring soon' if expiry_date == today else
+            'expired' if expiry_date < today else
+            'active'
+        )
+
+    # Calcola le statistiche
+    expiring_soon = sum(1 for user in users if user['status'] == 'expiring soon')
+    expired = sum(1 for user in users if user['status'] == 'expired')
+
+    # Crea la risposta finale
     response = {
         "users": users,
         "stats": {
@@ -57,7 +66,6 @@ def get_users_api():
     }
 
     return jsonify(response), 200
-
 
 @users_bp.route('/users/<user_id>', methods=['DELETE'])
 def delete_user_api(user_id):
