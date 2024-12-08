@@ -1,11 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>guest-stack</title>
-    </head>
-    <body>
-        <h1>Guest-Stack hello</h1>
-    </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+  <div class="container mx-auto p-4">
+    <h1 class="text-3xl font-semibold text-center text-indigo-600 mb-8">User Management</h1>
+
+    <!-- Summary Section -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center mb-8">
+      <div class="bg-white p-4 rounded-lg shadow-md">
+        <h2 id="total-users" class="text-2xl font-semibold text-indigo-600">0</h2>
+        <p class="text-gray-600">Total Users</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow-md">
+        <h2 id="expiring-users" class="text-2xl font-semibold text-yellow-500">0</h2>
+        <p class="text-gray-600">Expiring Today</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg shadow-md">
+        <h2 id="expired-users" class="text-2xl font-semibold text-red-500">0</h2>
+        <p class="text-gray-600">Expired Users</p>
+      </div>
+    </div>
+
+    <!-- User List Section -->
+    <h3 class="text-2xl font-semibold mb-4">User List</h3>
+    <div id="user-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <p class="text-center text-gray-600">Loading users...</p>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/api/v1/users');
+        const users = await response.json();
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(today.getDate() + 1);
+
+        let totalUsers = 0, expiringUsers = 0, expiredUsers = 0;
+        const userList = document.getElementById('user-list');
+        userList.innerHTML = '';
+
+        users.forEach(user => {
+          totalUsers++;
+          const expiryDate = new Date(user.expiry_time);
+
+          if (expiryDate < today) expiredUsers++;
+          else if (expiryDate >= today && expiryDate < tomorrow) expiringUsers++;
+
+          // Crea la card dell'utente senza innerHTML
+          const userCard = document.createElement('div');
+          userCard.className = 'bg-white p-6 rounded-lg shadow-lg user-card';
+
+          const cardTitle = document.createElement('h5');
+          cardTitle.className = 'text-xl font-semibold text-indigo-600 mb-2';
+          cardTitle.textContent = user.username;
+
+          const cardTextEmail = document.createElement('p');
+          cardTextEmail.className = 'text-gray-600 mb-1';
+          cardTextEmail.textContent = `Email: ${user.email}`;
+
+          const cardTextRole = document.createElement('p');
+          cardTextRole.className = 'text-gray-600 mb-1';
+          cardTextRole.textContent = `Role: ${user.role}`;
+
+          const cardTextProject = document.createElement('p');
+          cardTextProject.className = 'text-gray-600 mb-1';
+          cardTextProject.textContent = `Project: ${user.project_name}`;
+
+          const cardTextExpiry = document.createElement('p');
+          cardTextExpiry.className = 'text-gray-600';
+          cardTextExpiry.textContent = `Expiry: ${expiryDate.toLocaleString()}`;
+
+          // Aggiungi gli elementi alla card
+          userCard.appendChild(cardTitle);
+          userCard.appendChild(cardTextEmail);
+          userCard.appendChild(cardTextRole);
+          userCard.appendChild(cardTextProject);
+          userCard.appendChild(cardTextExpiry);
+
+          // Aggiungi la card alla lista degli utenti
+          userList.appendChild(userCard);
+        });
+
+        // Aggiorna il riepilogo
+        document.getElementById('total-users').textContent = totalUsers;
+        document.getElementById('expiring-users').textContent = expiringUsers;
+        document.getElementById('expired-users').textContent = expiredUsers;
+
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        const errorMessage = document.createElement('p');
+        errorMessage.className = 'text-red-500 text-center';
+        errorMessage.textContent = 'Failed to load users.';
+        document.getElementById('user-list').appendChild(errorMessage);
+      }
+    });
+  </script>
+
+</body>
 </html>
