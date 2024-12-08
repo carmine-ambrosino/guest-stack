@@ -12,15 +12,17 @@ function createUserElement(user) {
     usernameDiv.className = 'flex items-center';
   
     const username = document.createElement('p');
-    username.className = 'text-lg font-bold text-gray-800';
+    username.className = 'text-2xl font-bold text-gray-800';
     username.textContent = user.username;
   
     const roleBadge = document.createElement('span');
-    roleBadge.className = `ml-3 text-xs font-medium px-3 py-1 rounded-full ${
+    roleBadge.className = `ml-3 text-xs font-bold px-3 py-1 rounded-full ${
     user.role === 'admin'
       ? 'bg-blue-100 text-blue-700'
       : user.role === 'member'
       ? 'bg-green-100 text-green-700'
+      : user.role === 'reader'
+      ? 'bg-green-100 text-yellow-700'
       : 'bg-gray-100 text-gray-700'
     }`;
     roleBadge.textContent = user.role;
@@ -34,8 +36,8 @@ function createUserElement(user) {
     email.textContent = user.email;
   
     const project = document.createElement('p');
-    project.className = 'text-sm text-gray-500';
-    project.textContent = `Project: ${user.project_name}`;
+    project.className = 'text-base font-bold text-gray-500';
+    project.textContent = `📂 ${user.project_name}`;
   
     leftDiv.appendChild(usernameDiv);
     leftDiv.appendChild(email);
@@ -77,12 +79,12 @@ function createUserElement(user) {
     const updateButton = document.createElement('button');
     updateButton.className =
       'px-4 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600';
-    updateButton.textContent = 'Update';
+    updateButton.textContent = '📝';
   
     const deleteButton = document.createElement('button');
     deleteButton.className =
-      'px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600';
-    deleteButton.textContent = 'Delete';
+      'px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700';
+    deleteButton.textContent = '🗑️';
   
     buttonDiv.appendChild(updateButton);
     buttonDiv.appendChild(deleteButton);
