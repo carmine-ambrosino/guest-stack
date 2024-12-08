@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             expiryInfo.textContent = `Expiry: ${expiryDate.toLocaleDateString()}`;
 
             const actionButtons = document.createElement("div");
-            actionButtons.className = "mt-2 flex space-x-4";
+            actionButtons.className = "mt-2 flex space-x-4 justify-end ml-auto"; // Allinea i pulsanti a destra
 
             const editButton = document.createElement("button");
             editButton.className = "text-sm text-blue-500 hover:underline";
@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 openModal("deleteModal");
             };
 
-            actionButtons.append(editButton, deleteButton);
+            actionButtons.append(editButton, deleteButton); // I pulsanti sono ora allineati a destra
             userStatus.append(statusText, expiryInfo, actionButtons);
             userInfo.append(userName, userEmail, userDetails);
             userItem.append(userInfo, userStatus);
@@ -167,7 +167,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                     user.role.toLowerCase().includes(query)
             );
             loadUsers(filteredUsers);
-            updateStatistics(filteredUsers);  // Aggiorna le statistiche quando i risultati della ricerca cambiano
         });
     } catch (error) {
         console.error("Errore durante il caricamento degli utenti:", error);
