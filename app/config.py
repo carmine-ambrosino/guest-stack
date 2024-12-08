@@ -1,4 +1,5 @@
 class Config:
+    API_PREFIX = "/api/v1"
     # Database configuration
     DATABASE_URI = "backend/db/temporary_users.db"
 
@@ -13,7 +14,7 @@ class Config:
     }
 
     # Application configuration
-    DEBUG = False
+    DEBUG = True
     FLASK_PORT = 5000
     FLASK_HOST = "0.0.0.0"
     RELOADER = False

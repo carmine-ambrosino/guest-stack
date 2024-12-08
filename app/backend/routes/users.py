@@ -5,7 +5,7 @@ from config import Config
 user_manager = UserManager(**Config.OPENSTACK)
 
 # Definizione del Blueprint per le route degli utenti
-users_bp = Blueprint('users', __name__)
+users_bp = Blueprint('users', __name__, url_prefix=Config.API_PREFIX)
 
 @users_bp.route('/users', methods=['POST'])
 def create_user_api():

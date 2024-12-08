@@ -10,6 +10,7 @@
 # Ignore pycache
 app/__pycache__
 app/backend/__pycache__
+app/backend/db/__pycache__
 app/backend/routes/__pycache__
 app/scheduler/__pycache__
 
