@@ -26,19 +26,22 @@ async function loadUsers() {
   }
 }
 
-// Apri il modale per aggiungere un utente
 document.getElementById("addUserButton").addEventListener("click", () => {
   currentUserId = null;
   document.getElementById("modalTitle").textContent = "Add User";
   document.getElementById("userForm").reset();
+  
+  // Riabilita il campo username quando si aggiunge un nuovo utente
+  document.getElementById("username").disabled = false;
+
   toggleModal("userModal", true);
 });
 
-// Gestione della sottomissione del form per aggiungere o aggiornare un utente
+
 document.getElementById("userForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const user = {
-    username: document.getElementById("username").value,
+    // Non includiamo username nell'oggetto user se stiamo aggiornando
     email: document.getElementById("email").value,
     project: document.getElementById("project").value,
     role: document.getElementById("role").value,
@@ -47,23 +50,26 @@ document.getElementById("userForm").addEventListener("submit", async (e) => {
 
   try {
     if (currentUserId) {
+      // Se currentUserId è definito, aggiorna l'utente esistente
       await updateUser(currentUserId, user);
       alert("User updated successfully!");
     } else {
+      // Se currentUserId è null, aggiungi un nuovo utente
       await addUser(user);
       alert("User added successfully!");
     }
     toggleModal("userModal", false);
-    loadUsers();
+    loadUsers();  // Ricarica gli utenti per riflettere le modifiche
   } catch (error) {
     console.error("Error saving user:", error);
     alert("Failed to save user. Please try again.");
   }
 });
 
-// Apri il modale per modificare un utente
+
+
 function openEditModal(user) {
-  currentUserId = user.openstack_id;
+  currentUserId = user.id; // Assicurati che user.id sia passato correttamente
   document.getElementById("modalTitle").textContent = "Edit User";
 
   // Popola il form con i dati dell'utente
@@ -73,8 +79,13 @@ function openEditModal(user) {
   document.getElementById("role").value = user.role;
   document.getElementById("expiryTime").value = new Date(user.expiry_time).toISOString().slice(0, 16);
 
-  toggleModal("userModal", true);
+  // Disabilita il campo username in modalità "edit"
+  document.getElementById("username").disabled = true;
+
+  toggleModal("userModal", true); // Mostra il modale per la modifica
 }
+
+
 
 function openDeleteModal(userId) {
   currentUserId = userId;  // Aggiorna currentUserId con l'ID dell'utente
