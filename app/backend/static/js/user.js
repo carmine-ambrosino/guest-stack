@@ -115,9 +115,9 @@ function createButtonDiv(userId, user, onEdit, onDelete, onProject) {
     }
   });
 
-  // Pulsante per il progetto (📁)
+  // Pulsante per un nuovo progetto (🆕📁)
   const projectButton = createButton(
-    "📁",
+    "🆕📁",
     "text-green-500 hover:text-green-600"
   );
   projectButton.addEventListener("click", async () => {

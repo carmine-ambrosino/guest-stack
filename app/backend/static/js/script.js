@@ -44,6 +44,7 @@ document.getElementById("searchInput").addEventListener("focus", function () {
 async function loadUsers() {
   try {
     const data = await fetchUsers();
+    data.users.sort((a, b) => new Date(a.expiry_time) - new Date(b.expiry_time));      
 
     // Aggiorna le statistiche
     document.getElementById("totalUsersCount").textContent = data.stats.users;
