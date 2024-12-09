@@ -1,16 +1,22 @@
-//utils.js
-export function toggleModal(modalId, show = true) {
+// utils.js
+
+// Mostra o nasconde un modale
+export function toggleModal(modalId, show) {
   const modal = document.getElementById(modalId);
-  modal.classList.toggle("hidden", !show);
+  if (modal) {
+    modal.classList.toggle("hidden", !show);
+  }
 }
 
-// Funzione per mostrare notifiche globali
-export function showNotification(message, type = "success") {
+// Mostra una notifica all'utente
+export function showNotification(message, type = "info") {
   const notificationContainer = document.getElementById(
     "notificationContainer"
   );
 
   const notification = document.createElement("div");
+  notification.textContent = message;
+
   notification.className = `p-4 rounded-lg shadow-lg text-white font-bold transition-transform duration-300 ${
     type === "success"
       ? "bg-green-500"
@@ -18,6 +24,7 @@ export function showNotification(message, type = "success") {
       ? "bg-red-500"
       : "bg-blue-500"
   }`;
+  
   notification.textContent = message;
 
   notificationContainer.appendChild(notification);
@@ -29,26 +36,27 @@ export function showNotification(message, type = "success") {
   }, 5000);
 }
 
-export async function handleEdit(user) {
-  try {
-    showNotification("Updating user...", "info");
-    await onEdit(user);
-    showNotification("User updated successfully!", "success");
-    loadUsers(); // Ricarica la lista degli utenti
-  } catch (error) {
-    console.error("Error updating user:", error);
-    showNotification("Failed to update user. Please try again.", "error");
+// Resetta un campo input
+export function resetInput(inputId) {
+  const input = document.getElementById(inputId);
+  if (input) {
+    input.value = "";
+    input.classList.remove("focus:ring-2", "focus:ring-gray-400");
+    input.classList.add("border-gray-300");
   }
 }
 
-export async function handleDelete(userId) {
-  try {
-    showNotification("Deleting user...", "info");
-    await onDelete(userId);
-    showNotification("User deleted successfully!", "success");
-    loadUsers(); // Ricarica la lista degli utenti
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    showNotification("Failed to delete user. Please try again.", "error");
+// Aggiorna le statistiche
+export function updateStats(stats) {
+  document.getElementById("totalUsersCount").textContent = stats.users;
+  document.getElementById("expiringSoonCount").textContent = stats.expiring_soon;
+  document.getElementById("expiredCount").textContent = stats.expired;
+}
+
+// Gestione del focus nell'input di ricerca
+export function handleSearchFocus(inputId) {
+  const input = document.getElementById(inputId);
+  if (input) {
+    input.classList.add("focus:ring-2", "focus:ring-gray-400");
   }
 }

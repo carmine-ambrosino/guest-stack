@@ -1,162 +1,120 @@
-import { showNotification } from "./utils.js";
+// user.js
 
-export function createUserElement(user, onEdit, onDelete, onProject) {
+// Crea un elemento della lista utente
+export function createUserElement(user, onEdit, onDelete, onProjectChange) {
   const li = document.createElement("li");
-  li.className =
-    "p-4 bg-gray-100 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-4 items-center";
+  li.className = "user-item flex items-start py-4 px-4 border-b border-gray-100 bg-gray-100 rounded-xl"; // Usa margini più ampi per una disposizione chiara
 
-  // Sezione sinistra: informazioni dell'utente
-  const leftDiv = document.createElement("div");
-  leftDiv.className = "flex flex-col items-start";
+  // Crea l'avatar dell'utente
+  const avatar = document.createElement("div");
+  avatar.className = "avatar w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center text-white text-xl";
+  avatar.textContent = user.username.charAt(0).toUpperCase(); // Prende la prima lettera del nome utente
 
-  const username = createTextElement(
-    "p",
-    user.username,
-    "text-2xl font-bold text-gray-800"
-  );
-  leftDiv.appendChild(username);
+  // Crea il contenitore delle informazioni dell'utente
+  const userInfo = document.createElement("div");
+  userInfo.className = "flex-1 pl-4"; 
 
-  const email = createTextElement("p", user.email, "text-sm text-gray-600");
-  const project = createTextElement(
-    "p",
-    `📂 ${user.project_name}`,
-    "text-base font-bold text-gray-500"
-  );
-  const roleBadge = createRoleBadge(user.role);
+  // Nome utente
+  const userName = document.createElement("div");
+  userName.className = "font-bold";
+  userName.textContent = user.username;
 
-  leftDiv.appendChild(email);
-  leftDiv.appendChild(project);
-  leftDiv.appendChild(roleBadge);
+  // Email dell'utente
+  const userEmail = document.createElement("div");
+  userEmail.className = "text-gray-600 text-sm";
+  userEmail.textContent = user.email;
 
-  // Sezione destra: stato e pulsanti
-  const rightDiv = document.createElement("div");
-  rightDiv.className = "flex flex-col items-end";
+  // Progetto dell'utente
+  const userProject = document.createElement("div");
+  userProject.className = "font-semibold text-gray-600 text-sm";
+  userProject.textContent = `📂 ${user.project_name}`;
 
-  const statusDiv = createStatusDiv(user);
-  rightDiv.appendChild(statusDiv);
+  // Ruolo dell'utente
+  const userRole = document.createElement("div");
 
-  const expiryDate = createTextElement(
-    "p",
-    new Date(user.expiry_time).toLocaleDateString("it-IT"),
-    "text-base font-bold text-gray-800"
-  );
-  const expiryTime = createTextElement(
-    "p",
-    new Date(user.expiry_time).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-    "text-xs text-gray-500"
-  );
+  // Mappa dei ruoli con colori di sfondo e testo
+  const roleStyles = {
+    admin: { background: "bg-blue-100", text: "text-blue-500" },
+    member: { background: "bg-green-100", text: "text-green-500" },
+    reader: { background: "bg-orange-100", text: "text-orange-500" },
+    default: { background: "bg-black-100", text: "text-white" }, // Colore di default
+  };
+  
+  // Imposta le classi in base al ruolo
+  const { background, text } = roleStyles[user.role] || roleStyles.default; // Usa il ruolo o il default
+  
+  userRole.className = `text-sm font-bold rounded ${background} ${text} inline-block px-2 py-1`;
+  userRole.textContent = `${user.role}`;
+    
 
-  rightDiv.appendChild(expiryDate);
-  rightDiv.appendChild(expiryTime);
+  userInfo.appendChild(userName);
+  userInfo.appendChild(userEmail);
+  userInfo.appendChild(userProject);
+  userInfo.appendChild(userRole);
 
-  // Div per i pulsanti
-  const buttonDiv = createButtonDiv(user.id, user, onEdit, onDelete, onProject);
-  rightDiv.appendChild(buttonDiv);
+  li.appendChild(avatar); // Aggiungi l'avatar a sinistra
+  li.appendChild(userInfo); // Aggiungi le informazioni dell'utente accanto all'avatar
 
-  li.appendChild(leftDiv);
-  li.appendChild(rightDiv);
+  // Crea il contenitore per lo stato dell'utente (attivo, scaduto, in scadenza)
+  const statusContainer = document.createElement("div");
+  statusContainer.className = "flex flex-col status-container items-start"; // Allinea il contenuto a destra
+
+  const status = document.createElement("span");
+  status.className = "status text-sm rounded px-2 py-1 mb-4"; // Aggiungi margine inferiore per distanziare
+  if (user.status === "active") {
+    status.textContent = "🟢 Active";
+    status.classList.add("bg-green-200", "text-green-800", "font-bold", "ml-28");
+  } else if (user.status === "expiring soon") {
+    status.textContent = "🟡 Expiring Soon";
+    status.classList.add("bg-yellow-200", "text-yellow-800", "font-bold", "ml-14");
+  } else {
+    status.textContent = "🔴 Expired";
+    status.classList.add("bg-red-200", "text-red-800", "font-bold", "ml-24");
+  }
+
+  statusContainer.appendChild(status); // Aggiungi lo stato in cima
+
+  // Crea il contenitore per i pulsanti (Modifica, Elimina, Cambia progetto)
+  const actions = document.createElement("div");
+  actions.className = "flex-col px-2 py-1 ml-20 space-x-4"; // Disposizione verticale dei pulsanti
+
+  // Pulsante per modificare
+  const editButton = document.createElement("button");
+  editButton.className = "edit-button text-blue-500 hover:text-blue-700";
+  editButton.textContent = "✏️";
+  editButton.addEventListener("click", () => onEdit(user));
+
+  // Pulsante per eliminare
+  const deleteButton = document.createElement("button");
+  deleteButton.className = "delete-button text-red-500 hover:text-red-700";
+  deleteButton.textContent = "❌";
+  deleteButton.addEventListener("click", () => onDelete(user.id));
+
+  // Pulsante per cambiare progetto
+  const projectButton = document.createElement("button");
+  projectButton.className = "project-button text-yellow-500 hover:text-yellow-700";
+  projectButton.textContent = " ➕ ";
+  projectButton.addEventListener("click", () => onProjectChange(user.id));
+
+  actions.appendChild(projectButton);
+  actions.appendChild(editButton);
+  actions.appendChild(deleteButton);
+
+  statusContainer.appendChild(actions); // Aggiungi i pulsanti sotto lo status
+
+  li.appendChild(statusContainer); // Aggiungi il contenitore dello stato e dei pulsanti a destra
 
   return li;
 }
 
-// Funzione per creare il badge del ruolo
-function createRoleBadge(role) {
-  const roleBadge = document.createElement("span");
-  roleBadge.className = `mt-1 text-xs font-bold px-3 py-1 rounded-full inline-block ${
-    role === "admin"
-      ? "bg-blue-100 text-blue-700"
-      : role === "member"
-      ? "bg-green-100 text-green-700"
-      : "bg-yellow-100 text-yellow-700"
-  }`;
-  roleBadge.textContent = role;
-  return roleBadge;
-}
+// Funzione per generare il contenuto del modale utente
+export function populateUserModal(user) {
+  document.getElementById("username").value = user.username;
+  document.getElementById("email").value = user.email;
+  document.getElementById("project").value = user.project_name;
+  document.getElementById("role").value = user.role;
 
-// Funzione per creare lo stato
-function createStatusDiv(user) {
-  const statusDiv = document.createElement("div");
-  statusDiv.className = `text-xs font-bold px-3 py-1 rounded-lg mb-2 ${
-    user.status === "active"
-      ? "bg-green-100 text-green-700"
-      : user.status === "expiring soon"
-      ? "bg-yellow-100 text-yellow-700"
-      : user.status === "expired"
-      ? "bg-red-100 text-red-700"
-      : "bg-gray-100 text-gray-700" // Valore di default
-  }`;
-
-  statusDiv.textContent =
-    user.status === "active"
-      ? "Active"
-      : user.status === "expiring soon"
-      ? "Expiring Soon"
-      : user.status === "expired"
-      ? "Expired"
-      : "Unknown Status";
-  return statusDiv;
-}
-
-// Funzione per creare il div dei pulsanti
-function createButtonDiv(userId, user, onEdit, onDelete, onProject) {
-  const buttonDiv = document.createElement("div");
-  buttonDiv.className = "flex gap-2 mt-2";
-
-  // Pulsante per modificare (🖊)
-  const updateButton = createButton("🖊", "text-blue-500 hover:text-blue-600");
-  updateButton.addEventListener("click", async () => {
-    try {
-      await onEdit(user);
-    } catch (error) {
-      showNotification("Failed to update user: " + error.message, "error");
-    }
-  });
-
-  // Pulsante per un nuovo progetto (🆕📁)
-  const projectButton = createButton(
-    "🆕📁",
-    "text-green-500 hover:text-green-600"
-  );
-  projectButton.addEventListener("click", async () => {
-    try {
-      await onProject(userId);
-    } catch (error) {
-      showNotification("Failed to update project: " + error.message, "error");
-    }
-  });
-
-  // Pulsante per eliminare (❌)
-  const deleteButton = createButton("❌", "text-red-500 hover:text-red-600");
-  deleteButton.addEventListener("click", async () => {
-    try {
-      await onDelete(userId);
-    } catch (error) {
-      showNotification("Failed to delete user: " + error.message, "error");
-    }
-  });
-
-  buttonDiv.appendChild(projectButton);
-  buttonDiv.appendChild(updateButton);
-  buttonDiv.appendChild(deleteButton);
-
-  return buttonDiv;
-}
-
-// Funzione per creare un pulsante
-function createButton(text, className) {
-  const button = document.createElement("button");
-  button.className = className;
-  button.textContent = text;
-  return button;
-}
-
-// Funzione per creare un elemento di testo
-function createTextElement(tag, textContent, className) {
-  const element = document.createElement(tag);
-  element.textContent = textContent;
-  element.className = className;
-  return element;
+  const expiryTime = new Date(user.expiry_time);
+  document.getElementById("expiryDate").value = expiryTime.toISOString().slice(0, 10);
+  document.getElementById("expiryClock").value = expiryTime.toISOString().slice(11, 16);
 }
