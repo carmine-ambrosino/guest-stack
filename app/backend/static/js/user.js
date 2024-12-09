@@ -34,9 +34,9 @@ export function createUserElement(user, onEdit, onDelete, onProjectChange) {
 
   // Mappa dei ruoli con colori di sfondo e testo
   const roleStyles = {
-    admin: { background: "bg-blue-100", text: "text-blue-500" },
-    member: { background: "bg-green-100", text: "text-green-500" },
-    reader: { background: "bg-orange-100", text: "text-orange-500" },
+    admin: { background: "bg-red-100", text: "text-red-500" },
+    member: { background: "bg-blue-100", text: "text-blue-500" },
+    reader: { background: "bg-yellow-100", text: "text-yellow-500" },
     default: { background: "bg-black-100", text: "text-white" }, // Colore di default
   };
   

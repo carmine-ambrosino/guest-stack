@@ -12,9 +12,13 @@
     ></script>
   </head>
   <body class="bg-gray-50 font-sans">
-    <div class="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-      <h1 class="text-2xl font-bold text-gray-700 mb-4">guest-stack</h1>
-
+    <header class="bg-gray-800 text-white py-4">
+      <div class="container mx-auto text-center">
+          <h1 class="text-3xl font-bold">guest-stack</h1>
+      </div>
+    </header>
+  
+    <div class="max-w-5xl mx-auto mt-10 mb-10 p-6 bg-white shadow-lg rounded-lg">
       <!-- Stats -->
       <div class="grid grid-cols-3 gap-4 mb-4">
         <div class="text-center p-4 bg-gray-100 rounded-lg">
@@ -48,15 +52,15 @@
         />
         <button
           id="addUserButton"
-          class="ml-4 bg-blue-500 font-bold text-base text-white py-3 px-6 rounded-lg hover:bg-blue-900"
+          class="ml-4 bg-gray-200 font-bold text-base text-blue-600 py-3 px-6 rounded-lg hover:bg-indigo-900"
         >
-          + 👤
+          + 👥
         </button>
       </div>
 
       <!-- Temp user list -->
       <div>
-        <h2 class="text-lg font-bold text-gray-700 mb-2">Temp Users</h2>
+        <h2 class="text-lg font-bold text-gray-700 mb-2"> 🕓 Temp Users</h2>
         <ul id="userList" class="space-y-4">
           <!-- Dynamic loading -->
         </ul>
@@ -209,5 +213,13 @@
         </div>
       </div>
     </div>
+
+    <footer class="bg-gray-800 text-white py-10">
+      <div class="container mx-auto text-center">
+          <h2 class="text-2xl font-bold mb-2">Made with ❤️</h2>
+      </div>
+  </footer>
+  
+  
   </body>
 </html>
