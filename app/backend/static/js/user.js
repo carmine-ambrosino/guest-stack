@@ -1,3 +1,5 @@
+import { showNotification } from "./utils.js";
+
 export function createUserElement(user, onEdit, onDelete) {
   const li = document.createElement("li");
   li.className =
@@ -74,23 +76,33 @@ function createStatusDiv(user) {
   return statusDiv;
 }
 
-
 function createButtonDiv(userId, user, onEdit, onDelete) {
   const buttonDiv = document.createElement("div");
   buttonDiv.className = "flex gap-2 mt-2";
 
   const updateButton = createButton("🖊", "text-blue-500 hover:text-blue-600");
-  updateButton.addEventListener("click", () => onEdit(user));
+  updateButton.addEventListener("click", async () => {
+    try {
+      await onEdit(user);
+    } catch (error) {
+      showNotification("Failed to update user: " + error.message, "error");
+    }
+  });
 
   const deleteButton = createButton("❌", "text-red-500 hover:text-red-600");
-  deleteButton.addEventListener("click", () => onDelete(userId));  // Qui viene passato userId
+  deleteButton.addEventListener("click", async () => {
+    try {
+      await onDelete(userId);
+    } catch (error) {
+      showNotification("Failed to delete user: " + error.message, "error");
+    }
+  });
 
   buttonDiv.appendChild(updateButton);
   buttonDiv.appendChild(deleteButton);
 
   return buttonDiv;
 }
-
 
 function createButton(text, className) {
   const button = document.createElement("button");
