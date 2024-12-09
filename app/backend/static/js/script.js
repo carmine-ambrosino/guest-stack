@@ -26,48 +26,62 @@ async function loadUsers() {
   }
 }
 
+// Apri il modale per aggiungere un utente
 document.getElementById("addUserButton").addEventListener("click", () => {
   currentUserId = null;
   document.getElementById("modalTitle").textContent = "Add User";
+
+  // Ripristina i valori del form
   document.getElementById("userForm").reset();
-  
+
   // Riabilita il campo username quando si aggiunge un nuovo utente
   document.getElementById("username").disabled = false;
 
-  toggleModal("userModal", true);
+  toggleModal("userModal", true);  // Mostra il modale per l'aggiunta
 });
 
-
+// Gestione del salvataggio del form
 document.getElementById("userForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const user = {
-    // Non includiamo username nell'oggetto user se stiamo aggiornando
-    email: document.getElementById("email").value,
-    project: document.getElementById("project").value,
-    role: document.getElementById("role").value,
-    expiry_time: document.getElementById("expiryTime").value,
-  };
+
+  // Ottieni i dati dal form
+  const email = document.getElementById("email").value;
+  const project = document.getElementById("project").value;
+  const role = document.getElementById("role").value;
+  const expiryTime = document.getElementById("expiryTime").value;
+
+  // Crea l'oggetto utente
+  const user = { email, project, role, expiry_time: expiryTime };
+
+  // Se si sta aggiungendo, aggiungi `username`
+  if (!currentUserId) {
+    const username = document.getElementById("username").value;
+    if (!username) {
+      alert("Username is required for new users.");
+      return;
+    }
+    user.username = username;
+  }
 
   try {
     if (currentUserId) {
-      // Se currentUserId è definito, aggiorna l'utente esistente
+      // Aggiorna l'utente
       await updateUser(currentUserId, user);
       alert("User updated successfully!");
     } else {
-      // Se currentUserId è null, aggiungi un nuovo utente
+      // Aggiungi un nuovo utente
       await addUser(user);
       alert("User added successfully!");
     }
-    toggleModal("userModal", false);
-    loadUsers();  // Ricarica gli utenti per riflettere le modifiche
+    toggleModal("userModal", false); // Chiudi il modale
+    loadUsers();  // Ricarica la lista degli utenti
   } catch (error) {
     console.error("Error saving user:", error);
     alert("Failed to save user. Please try again.");
   }
 });
 
-
-
+// Apri il modale per modificare un utente
 function openEditModal(user) {
   currentUserId = user.id; // Assicurati che user.id sia passato correttamente
   document.getElementById("modalTitle").textContent = "Edit User";
@@ -85,13 +99,11 @@ function openEditModal(user) {
   toggleModal("userModal", true); // Mostra il modale per la modifica
 }
 
-
-
+// Apri il modale per eliminare un utente
 function openDeleteModal(userId) {
   currentUserId = userId;  // Aggiorna currentUserId con l'ID dell'utente
   toggleModal("deleteModal", true);
 }
-
 
 // Conferma l'eliminazione dell'utente
 document.getElementById("confirmDeleteButton").addEventListener("click", async () => {

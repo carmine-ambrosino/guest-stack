@@ -61,15 +61,19 @@ function createStatusDiv(user) {
   const statusDiv = document.createElement("div");
   statusDiv.className = `text-xs font-bold px-3 py-1 rounded-lg mb-2 ${
     user.status === "active" ? "bg-green-100 text-green-700" : 
-    user.status === "expiring_soon" ? "bg-yellow-100 text-yellow-700" : 
-    "bg-red-100 text-red-700"
+    user.status === "expiring soon" ? "bg-yellow-100 text-yellow-700" : 
+    user.status === "expired" ? "bg-red-100 text-red-700" : 
+    "bg-gray-100 text-gray-700" // Valore di default
   }`;
+  
   statusDiv.textContent =
     user.status === "active" ? "Active" : 
-    user.status === "expiring_soon" ? "Expiring Soon" : 
-    "Expired";
+    user.status === "expiring soon" ? "Expiring Soon" : 
+    user.status === "expired" ? "Expired" : 
+    "Unknown Status";
   return statusDiv;
 }
+
 
 function createButtonDiv(userId, user, onEdit, onDelete) {
   const buttonDiv = document.createElement("div");

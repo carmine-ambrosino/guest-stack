@@ -15,7 +15,7 @@ def cleanup_expired_users():
         # Recupera gli utenti scaduti
         expired_users = conn.execute(
             """
-            SELECT openstack_user_id, username 
+            SELECT id, username 
             FROM temporary_users 
             WHERE expiry_time <= ?
             """,
@@ -29,18 +29,18 @@ def cleanup_expired_users():
         for user in expired_users:
             try:
                 # Elimina l'utente da OpenStack
-                user_manager.delete_user(user["openstack_user_id"])
-                logging.info(f"Deleted user: {user['username']} (ID: {user['openstack_user_id']})")
+                user_manager.delete_user(user["id"])
+                logging.info(f"Deleted user: {user['username']} (ID: {user['id']})")
 
                 # Rimuovi l'utente dal database
                 conn.execute(
-                    "DELETE FROM temporary_users WHERE openstack_user_id = ?",
-                    (user["openstack_user_id"],),
+                    "DELETE FROM temporary_users WHERE id = ?",
+                    (user["id"],)
                 )
                 conn.commit()
-                logging.info(f"Deleted user from database: {user['username']} (ID: {user['openstack_user_id']})")
+                #logging.info(f"Deleted user from database: {user['username']} (Openstack ID: {user['openstack_user_id']})")
             except Exception as e:
-                logging.info(f"Error deleting user {user['username']} (ID: {user['openstack_user_id']}): {e}")
+                logging.info(f"Error deleting user {user['username']}): {e}")
 
 
 if __name__ == "__main__":
