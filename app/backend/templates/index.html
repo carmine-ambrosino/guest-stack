@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>guest-stack</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script defer src="/static/js/script.js"></script>
+  <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
 </head>
 <body class="bg-gray-50 font-sans">
   <div class="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
@@ -14,15 +14,15 @@
     <!-- Statistiche -->
     <div class="grid grid-cols-3 gap-4 mb-4">
       <div class="text-center p-4 bg-gray-100 rounded-lg">
-        <p class="text-sm font-bold text-gray-500">Users</p>
+        <p class="text-sm font-bold text-gray-500">👥 Users</p>
         <p id="totalUsersCount" class="text-xl font-bold text-gray-800">0</p>
       </div>
       <div class="text-center p-4 bg-gray-100 rounded-lg">
-        <p class="text-sm font-bold text-yellow-500">Expiring Soon</p>
+        <p class="text-sm font-bold text-yellow-500">🕤 Expiring Soon</p>
         <p id="expiringSoonCount" class="text-xl font-bold text-gray-800">0</p>
       </div>
       <div class="text-center p-4 bg-gray-100 rounded-lg">
-        <p class="text-sm font-bold text-red-500">Expired</p>
+        <p class="text-sm font-bold text-red-500">⌛Expired</p>
         <p id="expiredCount" class="text-xl font-bold text-gray-800">0</p>
       </div>
     </div>
@@ -37,15 +37,15 @@
       />
       <button 
         id="addUserButton" 
-        class="ml-4 bg-black text-white py-3 px-6 rounded-lg"
+        class="ml-4 bg-blue-600 font-bold text-base text-white py-3 px-6 rounded-lg hover:bg-blue-900"
       >
-        Add User
+      +
       </button>
     </div>
 
     <!-- Lista Utenti -->
     <div>
-      <h2 class="text-lg font-bold text-gray-700 mb-2">Guest Users</h2>
+      <h2 class="text-lg font-bold text-gray-700 mb-2">Temp Users</h2>
       <ul id="userList" class="space-y-4">
         <!-- Gli utenti saranno caricati dinamicamente -->
       </ul>
