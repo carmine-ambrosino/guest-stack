@@ -15,7 +15,7 @@
     <div class="max-w-5xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
       <h1 class="text-2xl font-bold text-gray-700 mb-4">guest-stack</h1>
 
-      <!-- Statistiche -->
+      <!-- Stats -->
       <div class="grid grid-cols-3 gap-4 mb-4">
         <div class="text-center p-4 bg-gray-100 rounded-lg">
           <p class="text-sm font-bold text-gray-500">👥 Users</p>
@@ -33,9 +33,12 @@
         </div>
       </div>
 
-      <div id="notificationContainer" class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2"></div>
+      <div
+        id="notificationContainer"
+        class="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 space-y-2"
+      ></div>
 
-      <!-- Barra di ricerca -->
+      <!-- Search  -->
       <div class="flex justify-between items-center mb-6">
         <input
           type="text"
@@ -51,15 +54,50 @@
         </button>
       </div>
 
-      <!-- Lista Utenti -->
+      <!-- Temp user list -->
       <div>
         <h2 class="text-lg font-bold text-gray-700 mb-2">Temp Users</h2>
         <ul id="userList" class="space-y-4">
-          <!-- Gli utenti saranno caricati dinamicamente -->
+          <!-- Dynamic loading -->
         </ul>
       </div>
 
-      <!-- Modale per aggiungere/aggiornare un utente -->
+      <!-- Add project modal -->
+      <div
+        id="projectModal"
+        class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      >
+        <div class="bg-white p-6 rounded-lg max-w-md w-full">
+          <h2 class="text-lg font-bold mb-4">Update Project</h2>
+          <form id="projectForm" class="space-y-4">
+            <label for="projectName" class="block text-sm font-bold"
+              >Project Name</label
+            >
+            <input
+              type="text"
+              id="projectName"
+              class="w-full border p-2 rounded"
+            />
+            <div class="flex justify-end mt-4">
+              <button
+                type="button"
+                id="cancelProjectButton"
+                class="mr-2 px-4 py-2 bg-gray-300 rounded-md"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-indigo-600 text-white rounded-md"
+              >
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Add/update user modal -->
       <div
         id="userModal"
         class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center"
@@ -97,17 +135,30 @@
             <div>
               <label class="block text-sm font-bold">Role</label>
               <select id="role" class="w-full border p-2 rounded" required>
-                <option value="reader">Reader</option>
-                <option value="member">Member</option>
-                <option value="admin">Admin</option>
+                <option value="member">member</option>
+                <option value="admin">admin</option>
+                <option value="reader">reader</option>
               </select>
-            </div>
-            <div>
-              <label class="block text-sm font-bold">Expiry Time</label>
+              <label for="expiryDate" class="block text-sm font-bold mt-4"
+                >Expiry Date</label
+              >
               <input
-                type="datetime-local"
-                id="expiryTime"
+                type="date"
+                id="expiryDate"
                 class="w-full border p-2 rounded"
+                required
+              />
+            </div>
+
+            <div>
+              <label for="expiryClock" class="block text-sm font-bold"
+                >Expiry Time</label
+              >
+              <input
+                type="time"
+                id="expiryClock"
+                class="w-full border p-2 rounded"
+                value="18:00"
                 required
               />
             </div>
@@ -131,7 +182,7 @@
         </div>
       </div>
 
-      <!-- Modale per confermare l'eliminazione -->
+      <!-- Delete user modal -->
       <div
         id="deleteModal"
         class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center"
