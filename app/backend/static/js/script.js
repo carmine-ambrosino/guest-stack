@@ -1,13 +1,8 @@
 import { createUserElement } from './user.js';
 import { fetchUsers, addUser, updateUser, deleteUser } from './api.js';
+import { toggleModal } from './utils.js';
 
 let currentUserId = null; // Per identificare l'utente corrente (per aggiornamento o eliminazione)
-
-// Funzione per mostrare o nascondere i modali
-function toggleModal(modalId, show = true) {
-  const modal = document.getElementById(modalId);
-  modal.classList.toggle("hidden", !show);
-}
 
 // Carica utenti dall'API e popola la lista
 async function loadUsers() {
@@ -23,7 +18,7 @@ async function loadUsers() {
     const userList = document.getElementById("userList");
     userList.replaceChildren();
     data.users.forEach((user) => {
-      const userElement = createUserElement(user);
+      const userElement = createUserElement(user, openEditModal, openDeleteModal);
       userList.appendChild(userElement);
     });
   } catch (error) {
@@ -65,6 +60,21 @@ document.getElementById("userForm").addEventListener("submit", async (e) => {
     alert("Failed to save user. Please try again.");
   }
 });
+
+// Apri il modale per modificare un utente
+function openEditModal(user) {
+  currentUserId = user.openstack_id;
+  document.getElementById("modalTitle").textContent = "Edit User";
+
+  // Popola il form con i dati dell'utente
+  document.getElementById("username").value = user.username;
+  document.getElementById("email").value = user.email;
+  document.getElementById("project").value = user.project_name;
+  document.getElementById("role").value = user.role;
+  document.getElementById("expiryTime").value = new Date(user.expiry_time).toISOString().slice(0, 16);
+
+  toggleModal("userModal", true);
+}
 
 // Apri il modale per eliminare un utente
 function openDeleteModal(userId) {
