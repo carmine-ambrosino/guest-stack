@@ -37,7 +37,7 @@ export function createUserElement(user, onEdit, onDelete) {
   rightDiv.appendChild(expiryDate);
   rightDiv.appendChild(expiryTime);
 
-  const buttonDiv = createButtonDiv(user.openstack_id, user, onEdit, onDelete);
+  const buttonDiv = createButtonDiv(user.id, user, onEdit, onDelete);
   rightDiv.appendChild(buttonDiv);
 
   li.appendChild(leftDiv);
@@ -79,13 +79,14 @@ function createButtonDiv(userId, user, onEdit, onDelete) {
   updateButton.addEventListener("click", () => onEdit(user));
 
   const deleteButton = createButton("❌", "text-red-500 hover:text-red-600");
-  deleteButton.addEventListener("click", () => onDelete(userId));
+  deleteButton.addEventListener("click", () => onDelete(userId));  // Qui viene passato userId
 
   buttonDiv.appendChild(updateButton);
   buttonDiv.appendChild(deleteButton);
 
   return buttonDiv;
 }
+
 
 function createButton(text, className) {
   const button = document.createElement("button");

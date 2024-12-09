@@ -76,11 +76,11 @@ function openEditModal(user) {
   toggleModal("userModal", true);
 }
 
-// Apri il modale per eliminare un utente
 function openDeleteModal(userId) {
-  currentUserId = userId;
+  currentUserId = userId;  // Aggiorna currentUserId con l'ID dell'utente
   toggleModal("deleteModal", true);
 }
+
 
 // Conferma l'eliminazione dell'utente
 document.getElementById("confirmDeleteButton").addEventListener("click", async () => {
