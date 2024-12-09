@@ -36,6 +36,15 @@ class UserManager:
         characters = string.ascii_letters + string.digits + string.punctuation
         return ''.join(secrets.choice(characters) for _ in range(length))
 
+    @staticmethod
+    def is_valid_user_id(user_id):
+        try:
+            user_id = int(user_id)
+            return user_id > 0, user_id
+        except (ValueError, TypeError):
+            return False, None
+
+
     def create_user(self, username, expiry_time, email, project, role):
         self.validate_username(username)
         self.validate_email(email)
@@ -80,10 +89,14 @@ class UserManager:
         """
         if "username" in fields:
             return {"error": "Username cannot be updated"}, 400
+        
+        is_valid, user_id = self.is_valid_user_id(user_id)
+        if not is_valid:
+            return {"error": "Invalid user ID"}, 400
 
         with get_db_connection() as conn:
             user = conn.execute(
-                "SELECT * FROM temporary_users WHERE openstack_user_id = ?",
+                "SELECT * FROM temporary_users WHERE id = ?",
                 (user_id,)
             ).fetchone()
 
@@ -91,10 +104,10 @@ class UserManager:
                 return {"error": "User not found in the database"}, 404
 
             update_operations = {
-                "email": lambda value: self._update_email(conn, user_id, value),
-                "project": lambda value: self._update_project(conn, user_id, value),
-                "role": lambda value: self._update_role(conn, user_id, value, user["project_id"]),
-                "expiry_time": lambda value: self._update_expiry_time(conn, user_id, value)
+                "email": lambda value: self._update_email(conn, user["openstack_user_id"], value),
+                "project": lambda value: self._update_project(conn, user["openstack_user_id"], value),
+                "role": lambda value: self._update_role(conn, user["openstack_user_id"], value, user["project_id"]),
+                "expiry_time": lambda value: self._update_expiry_time(conn, user["openstack_user_id"], value)
             }
 
             updated_fields = []
@@ -192,10 +205,20 @@ class UserManager:
         return [dict(user) for user in users]
 
     def delete_user(self, user_id):
-        try:
-            self.keystone.users.delete(user_id)
-            with get_db_connection() as conn:
-                conn.execute("DELETE FROM temporary_users WHERE openstack_user_id = ?", (user_id,))
+        is_valid, user_id = self.is_valid_user_id(user_id)
+        if not is_valid:
+            return {"error": "Invalid user ID"}, 400
+
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM temporary_users WHERE id = ?", (user_id,)).fetchone()
+            if not user:
+                return {"error": "User not found in the database"}, 404
+
+            try:
+                self.keystone.users.delete(user["openstack_user_id"])
+                conn.execute("DELETE FROM temporary_users WHERE id = ?", (user_id,))
                 conn.commit()
-        except Exception as e:
-            raise Exception(f"Error deleting user: {e}")
+                return {"message": "User deleted successfully"}, 200
+            except Exception as e:
+                logging.error(f"Error deleting user: {e}")
+                return {"error": "An error occurred while deleting the user"}, 500

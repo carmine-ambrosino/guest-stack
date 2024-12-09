@@ -1,5 +1,3 @@
-import { toggleModal } from './utils.js';
-
 export function createUserElement(user, onEdit, onDelete) {
   const li = document.createElement("li");
   li.className =

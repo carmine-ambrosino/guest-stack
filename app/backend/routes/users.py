@@ -69,8 +69,6 @@ def get_users_api():
 
 @users_bp.route('/users/<user_id>', methods=['DELETE'])
 def delete_user_api(user_id):
-    try:
-        user_manager.delete_user(user_id)
-        return jsonify({"message": "User deleted"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    result, status_code = user_manager.delete_user(user_id)
+    return jsonify(result), status_code
+
