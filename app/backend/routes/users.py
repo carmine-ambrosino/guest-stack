@@ -67,6 +67,13 @@ def get_users_api():
 
     return jsonify(response), 200
 
+@users_bp.route('/users/<user_id>', methods=['GET'])
+def get_user(user_id):
+    user = user_manager.get_temp_users_by_id(user_id)
+    if user is None:
+        return jsonify({"error": "User not found"}), 404  
+    return jsonify(user), 200
+
 @users_bp.route('/users/<user_id>', methods=['DELETE'])
 def delete_user_api(user_id):
     result, status_code = user_manager.delete_user(user_id)

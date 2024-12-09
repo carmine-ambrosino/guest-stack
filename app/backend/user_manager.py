@@ -204,6 +204,15 @@ class UserManager:
             users = conn.execute("SELECT * FROM temporary_users").fetchall()
         return [dict(user) for user in users]
 
+    def get_temp_users_by_id(self, user_id):
+        is_valid, user_id = self.is_valid_user_id(user_id)
+        if not is_valid:
+            return {"error": "Invalid user ID"}, 400
+        with get_db_connection() as conn:
+            user = conn.execute("SELECT * FROM temporary_users WHERE id = ?", (user_id,)).fetchone()
+        return dict(user) if user else None
+
+
     def delete_user(self, user_id):
         is_valid, user_id = self.is_valid_user_id(user_id)
         if not is_valid:
