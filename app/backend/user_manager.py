@@ -103,8 +103,10 @@ class UserManager:
                 conn.commit()
 
             # Log della password
+            logging.info("----------------------------------------------------------------")
             logging.info(f"Generated password for user {username}: {password}")
-
+            logging.info("----------------------------------------------------------------")
+            
             return {"message": "User created", "openstack_id": user.id}, 201
         except Exception as e:
             logging.error(f"Error creating user: {e}")
