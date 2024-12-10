@@ -13,8 +13,8 @@ import {
   closeAllModals,
 } from "./modals.js";
 import { loadUsers, confirmDeleteUser } from "./users.js";
-import { handleUserFormSubmit, handleProjectFormSubmit } from "./handlers.js";
-// Se ci sono modali aperte, blocca tutto tranne ESC
+import { handleUserFormSubmit } from "./handlers.js";
+
 export { initializeApp };
 
 function initializeApp() {
@@ -46,11 +46,6 @@ function setupEventListeners() {
     confirmDeleteButton.addEventListener("click", confirmDeleteUser);
   }
 
-  const projectForm = document.getElementById("projectForm");
-  if (projectForm) {
-    projectForm.addEventListener("submit", handleProjectFormSubmit);
-  }
-
   setupModalCloseButtons();
 }
 
@@ -79,7 +74,4 @@ function setupModalCloseButtons() {
   document
     .getElementById("cancelDeleteButton")
     .addEventListener("click", () => toggleModal("deleteModal", false));
-  document
-    .getElementById("cancelProjectButton")
-    .addEventListener("click", () => toggleModal("projectModal", false));
 }

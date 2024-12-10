@@ -1,8 +1,20 @@
 // modals.js
-import { setCurrentUserId, setCurrentProjectUserId } from "./state.js";
+import { setCurrentUserId } from "./state.js";
 import { enableInputFields, disableInputFields } from "./utils.js";
+import { populateSelects } from "./utils.js";
 
 let openModalsCount = 0;
+
+export {
+  areModalsOpen,
+  incrementOpenModals,
+  decrementOpenModals,
+  toggleModal,
+  openAddUserModal,
+  openEditModal,
+  openDeleteModal,
+  closeAllModals,
+};
 
 function areModalsOpen() {
   return openModalsCount > 0;
@@ -32,8 +44,11 @@ function openAddUserModal() {
   setCurrentUserId(null); // id reset for new user
   document.getElementById("modalTitle").textContent = "Add User";
   document.getElementById("userForm").reset();
-  enableInputFields(["username", "project"]);
-  toggleModal("userModal", true);
+  enableInputFields(["username"]);
+
+  populateSelects().then(() => {
+    toggleModal("userModal", true);
+  });
 }
 
 function openEditModal(user) {
@@ -53,8 +68,10 @@ function openEditModal(user) {
     .toISOString()
     .slice(11, 16);
 
-  disableInputFields(["username", "project"]);
-  toggleModal("userModal", true);
+  populateSelects(user.project_name, user.role).then(() => {
+    disableInputFields(["username"]);
+    toggleModal("userModal", true);
+  });
 }
 
 function openDeleteModal(userId) {
@@ -62,26 +79,8 @@ function openDeleteModal(userId) {
   toggleModal("deleteModal", true);
 }
 
-function openProjectModal(userId) {
-  setCurrentProjectUserId(userId);
-  document.getElementById("projectForm").reset();
-  toggleModal("projectModal", true);
-}
-
 function closeAllModals() {
-  ["userModal", "deleteModal", "projectModal"].forEach((modalId) =>
+  ["userModal", "deleteModal"].forEach((modalId) =>
     toggleModal(modalId, false)
   );
 }
-
-export {
-  areModalsOpen,
-  incrementOpenModals,
-  decrementOpenModals,
-  toggleModal,
-  openAddUserModal,
-  openEditModal,
-  openDeleteModal,
-  openProjectModal,
-  closeAllModals,
-};

@@ -1,10 +1,11 @@
 // api.js
+export { fetchUsers, addUser, updateUser, deleteUser, fetchProjectsAndRoles };
 
 const API_BASE_URL = "/api/v1";
 
 async function fetchUsers() {
   try {
-    const response = await fetch("/api/v1/users");
+    const response = await fetch(`${API_BASE_URL}/users`);
     if (!response.ok) {
       throw new Error(`Failed to fetch users: ${response.statusText}`);
     }
@@ -14,10 +15,9 @@ async function fetchUsers() {
       throw new Error("Invalid data format received from API");
     }
 
-    return data; // Restituisce direttamente l'oggetto JSON
+    return data; 
   } catch (error) {
-    console.error("Error in fetchUsers:", error);
-    throw error; // Rilancia l'errore per la gestione nel chiamante
+    throw error;
   }
 }
 
@@ -54,4 +54,26 @@ async function deleteUser(userId) {
   }
 }
 
-export { fetchUsers, addUser, updateUser, deleteUser };
+
+async function fetchProjectsAndRoles() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/openstack/projects-roles`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch projects and roles: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    if (!data || !Array.isArray(data.projects) || !Array.isArray(data.roles)) {
+      throw new Error("Invalid data format received from API");
+    }
+
+    return data; 
+  } catch (error) {
+    throw error;
+  }
+}
+
+
+
+
+

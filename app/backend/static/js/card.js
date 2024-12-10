@@ -1,18 +1,17 @@
 // card.js
 
-export function createUserElement(user, onEdit, onDelete, onProjectChange) {
+export function createUserElement(user, onEdit, onDelete) {
   const li = document.createElement("li");
   li.className =
     "user-item flex items-start py-4 px-4 border-b border-gray-100 bg-gray-100 rounded-xl";
 
-  // Aggiungi le sezioni modulari
+  
   const avatar = createAvatar(user);
   const userInfo = createUserInfo(user);
   const statusContainer = createStatusContainer(
     user,
     onEdit,
     onDelete,
-    onProjectChange
   );
 
   li.appendChild(avatar);
@@ -63,7 +62,7 @@ function createUserRole(role) {
     admin: { background: "bg-red-100", text: "text-red-500" },
     member: { background: "bg-blue-100", text: "text-blue-500" },
     reader: { background: "bg-yellow-100", text: "text-yellow-500" },
-    default: { background: "bg-black-100", text: "text-white" },
+    default: { background: "bg-white", text: "text-black" },
   };
 
   const { background, text } = roleStyles[role] || roleStyles.default;
@@ -74,13 +73,13 @@ function createUserRole(role) {
   return userRole;
 }
 
-function createStatusContainer(user, onEdit, onDelete, onProjectChange) {
+function createStatusContainer(user, onEdit, onDelete) {
   const statusContainer = document.createElement("div");
   statusContainer.className = "flex flex-col status-container items-start";
 
   const status = createStatus(user.status);
   const expiryTime = createExpiryTime(user.expiry_time);
-  const actions = createActionButtons(user, onEdit, onDelete, onProjectChange);
+  const actions = createActionButtons(user, onEdit, onDelete);
 
   statusContainer.appendChild(status);
   statusContainer.appendChild(expiryTime);
@@ -136,7 +135,7 @@ function createExpiryTime(expiry_time) {
   return expiryContainer;
 }
 
-function createActionButtons(user, onEdit, onDelete, onProjectChange) {
+function createActionButtons(user, onEdit, onDelete) {
   const actions = document.createElement("div");
   actions.className = "py-1 mt-2 ml-24 space-x-4";
 
@@ -150,13 +149,6 @@ function createActionButtons(user, onEdit, onDelete, onProjectChange) {
   deleteButton.textContent = "❌";
   deleteButton.addEventListener("click", () => onDelete(user.id));
 
-  const projectButton = document.createElement("button");
-  projectButton.className =
-    "project-button text-yellow-500 hover:text-yellow-700";
-  projectButton.textContent = "🆕📁";
-  projectButton.addEventListener("click", () => onProjectChange(user.id));
-
-  actions.appendChild(projectButton);
   actions.appendChild(editButton);
   actions.appendChild(deleteButton);
 

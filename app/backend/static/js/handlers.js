@@ -2,9 +2,9 @@ import { addUser, updateUser } from "./api.js";
 import { loadUsers } from "./users.js";
 import { showNotification } from "./utils.js";
 import { toggleModal } from "./modals.js";
-import { getCurrentUserId, getCurrentProjectUserId } from "./state.js";
+import { getCurrentUserId } from "./state.js";
 
-export { handleUserFormSubmit, handleProjectFormSubmit };
+export { handleUserFormSubmit };
 
 async function handleUserFormSubmit(event) {
   event.preventDefault();
@@ -38,20 +38,3 @@ async function handleUserFormSubmit(event) {
     showNotification("Failed to save user. Please try again.", "error");
   }
 }
-
-async function handleProjectFormSubmit(event) {
-  event.preventDefault();
-  const projectName = document.getElementById("projectName").value;
-
-  try {
-    const projectUserId = getCurrentProjectUserId();
-    await updateUser(projectUserId, { project: projectName });
-    showNotification("Project updated successfully!", "success");
-    toggleModal("projectModal", false);
-    loadUsers();
-  } catch (error) {
-    console.error("Error updating project:", error);
-    showNotification("Failed to update project. Please try again.", "error");
-  }
-}
-

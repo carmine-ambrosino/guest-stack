@@ -1,12 +1,7 @@
 import { fetchUsers, deleteUser } from "./api.js";
 import { createUserElement } from "./card.js";
 import { showNotification } from "./utils.js";
-import {
-  toggleModal,
-  openDeleteModal,
-  openEditModal,
-  openProjectModal,
-} from "./modals.js";
+import { toggleModal, openDeleteModal, openEditModal } from "./modals.js";
 import { getCurrentUserId } from "./state.js";
 
 export { loadUsers, confirmDeleteUser, filterUserList };
@@ -35,8 +30,7 @@ async function loadUsers() {
       const userElement = createUserElement(
         user,
         () => openEditModal(user),
-        () => openDeleteModal(user.id),
-        () => openProjectModal(user.id)
+        () => openDeleteModal(user.id)
       );
       userList.appendChild(userElement);
     });
