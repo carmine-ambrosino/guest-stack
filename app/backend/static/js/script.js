@@ -1,6 +1,6 @@
 import { createUserElement } from "./user.js";
 import { fetchUsers, addUser, updateUser, deleteUser } from "./api.js";
-import { toggleModal, showNotification, resetInput, updateStats, handleSearchFocus } from "./utils.js";
+import { toggleModal, showNotification, resetInput, handleSearchFocus } from "./utils.js";
 
 // Variabili di stato
 let currentUserId = null;

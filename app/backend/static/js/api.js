@@ -2,8 +2,7 @@
 
 const API_BASE_URL = "/api/v1";
 
-// Funzione per recuperare gli utenti dall'API
-export async function fetchUsers() {
+async function fetchUsers() {
   try {
     const response = await fetch("/api/v1/users");
     if (!response.ok) {
@@ -22,9 +21,7 @@ export async function fetchUsers() {
   }
 }
 
-
-// Aggiunge un nuovo utente
-export async function addUser(user) {
+async function addUser(user) {
   const response = await fetch(`${API_BASE_URL}/users`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -36,8 +33,7 @@ export async function addUser(user) {
   return await response.json();
 }
 
-// Aggiorna un utente esistente
-export async function updateUser(userId, user) {
+async function updateUser(userId, user) {
   const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -49,8 +45,7 @@ export async function updateUser(userId, user) {
   return await response.json();
 }
 
-// Elimina un utente
-export async function deleteUser(userId) {
+async function deleteUser(userId) {
   const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
     method: "DELETE",
   });
@@ -58,3 +53,5 @@ export async function deleteUser(userId) {
     throw new Error(`Error deleting user: ${response.statusText}`);
   }
 }
+
+export { fetchUsers, addUser, updateUser, deleteUser };
