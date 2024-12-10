@@ -53,10 +53,4 @@ export function updateStats(stats) {
   document.getElementById("expiredCount").textContent = stats.expired;
 }
 
-// Gestione del focus nell'input di ricerca
-export function handleSearchFocus(inputId) {
-  const input = document.getElementById(inputId);
-  if (input) {
-    input.classList.add("focus:ring-2", "focus:ring-gray-400");
-  }
-}
+
