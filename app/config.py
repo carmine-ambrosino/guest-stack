@@ -6,7 +6,7 @@ class Config:
 
     # OpenStack configuration
     OPENSTACK = {
-        "auth_url": "http://127.0.0.1/identity",
+        "auth_url": "http://192.168.122.134/identity",
         "username": "admin",
         "password": "nomoresecret",
         "user_domain_name": "default",
