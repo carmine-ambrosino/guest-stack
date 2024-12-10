@@ -1,11 +1,12 @@
 class Config:
     API_PREFIX = "/api/v1"
+    
     # Database configuration
     DATABASE_URI = "backend/db/temporary_users.db"
 
     # OpenStack configuration
     OPENSTACK = {
-        "auth_url": "http://192.168.122.134/identity",
+        "auth_url": "http://127.0.0.1/identity",
         "username": "admin",
         "password": "nomoresecret",
         "user_domain_name": "default",
@@ -14,8 +15,8 @@ class Config:
     }
 
     # Application configuration
-    DEBUG = True
-    FLASK_PORT = 5000
+    DEBUG = False
+    FLASK_PORT = 5234
     FLASK_HOST = "0.0.0.0"
     RELOADER = False
     TIME_SCHED = 1
