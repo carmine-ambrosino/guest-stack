@@ -17,19 +17,33 @@ class UserManager:
     @staticmethod
     def validate_email(email):
         if not UserManager.EMAIL_REGEX.match(email):
-            raise ValueError("Invalid email format")
+            return {"error": "Invalid email format"}, 400
 
     @staticmethod
     def validate_username(username):
         if not username or len(username) < 3:
-            raise ValueError("Username must be at least 3 characters long")
+            return {"error": "Username must be at least 3 characters long"}, 400
 
     @staticmethod
     def validate_expiry_time(expiry_time):
         try:
             datetime.fromisoformat(expiry_time)
         except ValueError:
-            raise ValueError("Invalid expiry_time format. Must be ISO 8601.")
+            return {"error": "Invalid expiry_time format. Must be ISO 8601."}, 400
+
+    @staticmethod
+    def validate_project(project, keystone):
+        try:
+            keystone.projects.find(name=project)
+        except Exception:
+            return {"error": f"Project '{project}' not found"}, 404
+
+    @staticmethod
+    def validate_role(role, keystone):
+        try:
+            keystone.roles.find(name=role)
+        except Exception:
+            return {"error": f"Role '{role}' not found"}, 404
 
     @staticmethod
     def generate_random_password(length=20):
@@ -46,14 +60,25 @@ class UserManager:
 
 
     def create_user(self, username, expiry_time, email, project, role):
-        self.validate_username(username)
-        self.validate_email(email)
-        self.validate_expiry_time(expiry_time)
+        # Validazioni centralizzate
+        validators = [
+            lambda: self.validate_username(username),
+            lambda: self.validate_email(email),
+            lambda: self.validate_expiry_time(expiry_time),
+            lambda: self.validate_project(project, self.keystone),
+            lambda: self.validate_role(role, self.keystone),
+        ]
+
+        for validate in validators:
+            error = validate()
+            if error:
+                return error
 
         expiry_time_utc = datetime.fromisoformat(expiry_time).astimezone(timezone.utc)
         password = self.generate_random_password()
 
         try:
+            # Creazione utente e assegnazione ruoli
             project_obj = self.keystone.projects.find(name=project)
             role_obj = self.keystone.roles.find(name=role)
             user = self.keystone.users.create(
@@ -65,6 +90,7 @@ class UserManager:
             )
             self.keystone.roles.grant(role=role_obj, user=user, project=project_obj)
 
+            # Salvataggio nel database
             with get_db_connection() as conn:
                 conn.execute(
                     """
@@ -76,12 +102,13 @@ class UserManager:
                 )
                 conn.commit()
 
-            # Stampare la password generata durante i test
+            # Log della password
             logging.info(f"Generated password for user {username}: {password}")
 
-            return {"message": "User created", "openstack_id": user.id }, 201
+            return {"message": "User created", "openstack_id": user.id}, 201
         except Exception as e:
-            return {"error": str(e)}, 500
+            logging.error(f"Error creating user: {e}")
+            return {"error": "An internal error occurred", "details": str(e)}, 500
 
     def update_user(self, user_id, **fields):
         """
