@@ -1,4 +1,4 @@
-// user.js
+// card.js
 
 export function createUserElement(user, onEdit, onDelete, onProjectChange) {
   const li = document.createElement("li");

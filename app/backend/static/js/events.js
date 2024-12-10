@@ -1,30 +1,43 @@
-import { openAddUserModal, confirmDeleteUser, loadUsers } from "./users.js";
-import { toggleModal, resetInput } from "./utils.js";
-import { handleUserFormSubmit, handleProjectFormSubmit } from "./formHandlers.js";
+import { resetInput } from "./utils.js";
+import { handleUserFormSubmit, handleProjectFormSubmit } from "./handlers.js";
+import { toggleModal, openAddUserModal } from "./modals.js";
+import { confirmDeleteUser, loadUsers } from "./users.js";
 
-// Gestione eventi principali
-export function setupEventListeners() {
+// setup event
+function setupEventListeners() {
   document.addEventListener("keydown", handleKeyDown);
-  document.getElementById("searchInput").addEventListener("input", filterUserList);
+  document
+    .getElementById("searchInput")
+    .addEventListener("input", filterUserList);
 
-  document.getElementById("addUserButton").addEventListener("click", openAddUserModal);
-  document.getElementById("userForm").addEventListener("submit", handleUserFormSubmit);
-  document.getElementById("confirmDeleteButton").addEventListener("click", confirmDeleteUser);
-  document.getElementById("projectForm").addEventListener("submit", handleProjectFormSubmit);
+  document
+    .getElementById("addUserButton")
+    .addEventListener("click", openAddUserModal);
+  document
+    .getElementById("userForm")
+    .addEventListener("submit", handleUserFormSubmit);
+  document
+    .getElementById("confirmDeleteButton")
+    .addEventListener("click", confirmDeleteUser);
+  document
+    .getElementById("projectForm")
+    .addEventListener("submit", handleProjectFormSubmit);
 
   setupModalCloseButtons();
 }
 
-// Gestione del tasto Escape per chiudere i modali
+// escape management
 function handleKeyDown(event) {
   if (event.key === "Escape") {
-    ["userModal", "deleteModal", "projectModal"].forEach((modalId) => toggleModal(modalId, false));
+    ["userModal", "deleteModal", "projectModal"].forEach((modalId) =>
+      toggleModal(modalId, false)
+    );
     resetInput("searchInput");
     loadUsers();
   }
 }
 
-// Filtra gli utenti nella lista
+// filter user list
 function filterUserList() {
   const searchTerm = document.getElementById("searchInput").value.toLowerCase();
   const users = document.querySelectorAll("#userList li");
@@ -34,9 +47,22 @@ function filterUserList() {
   });
 }
 
-// Gestione dei bottoni per chiudere i modali
+// modal close button setup
 function setupModalCloseButtons() {
-  document.getElementById("cancelButton").addEventListener("click", () => toggleModal("userModal", false));
-  document.getElementById("cancelDeleteButton").addEventListener("click", () => toggleModal("deleteModal", false));
-  document.getElementById("cancelProjectButton").addEventListener("click", () => toggleModal("projectModal", false));
+  document
+    .getElementById("cancelButton")
+    .addEventListener("click", () => toggleModal("userModal", false));
+  document
+    .getElementById("cancelDeleteButton")
+    .addEventListener("click", () => toggleModal("deleteModal", false));
+  document
+    .getElementById("cancelProjectButton")
+    .addEventListener("click", () => toggleModal("projectModal", false));
 }
+
+export {
+  setupEventListeners,
+  handleKeyDown,
+  filterUserList,
+  setupModalCloseButtons,
+};

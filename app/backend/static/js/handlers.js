@@ -1,15 +1,20 @@
 import { addUser, updateUser } from "./api.js";
 import { loadUsers } from "./users.js";
-import { toggleModal, showNotification } from "./utils.js";
+import { showNotification } from "./utils.js";
+import { toggleModal } from "./modals.js";
 import { getCurrentUserId, getCurrentProjectUserId } from "./state.js";
 
-export async function handleUserFormSubmit(event) {
+async function handleUserFormSubmit(event) {
   event.preventDefault();
   const user = {
     email: document.getElementById("email").value,
     project: document.getElementById("project").value,
     role: document.getElementById("role").value,
-    expiry_time: new Date(`${document.getElementById("expiryDate").value}T${document.getElementById("expiryClock").value}`).toISOString(),
+    expiry_time: new Date(
+      `${document.getElementById("expiryDate").value}T${
+        document.getElementById("expiryClock").value
+      }`
+    ).toISOString(),
   };
 
   try {
@@ -32,7 +37,7 @@ export async function handleUserFormSubmit(event) {
   }
 }
 
-export async function handleProjectFormSubmit(event) {
+async function handleProjectFormSubmit(event) {
   event.preventDefault();
   const projectName = document.getElementById("projectName").value;
 
@@ -47,3 +52,5 @@ export async function handleProjectFormSubmit(event) {
     showNotification("Failed to update project. Please try again.", "error");
   }
 }
+
+export { handleUserFormSubmit, handleProjectFormSubmit };

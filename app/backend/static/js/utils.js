@@ -1,15 +1,7 @@
 // utils.js
 
-// Mostra o nasconde un modale
-export function toggleModal(modalId, show) {
-  const modal = document.getElementById(modalId);
-  if (modal) {
-    modal.classList.toggle("hidden", !show);
-  }
-}
-
-// Mostra una notifica all'utente
-export function showNotification(message, type = "info") {
+// show notification
+function showNotification(message, type = "info") {
   const notificationContainer = document.getElementById(
     "notificationContainer"
   );
@@ -24,20 +16,20 @@ export function showNotification(message, type = "info") {
       ? "bg-red-500"
       : "bg-blue-500"
   }`;
-  
+
   notification.textContent = message;
 
   notificationContainer.appendChild(notification);
 
-  // Rimuovi automaticamente la notifica dopo 5 secondi
+  // timout notification
   setTimeout(() => {
     notification.classList.add("opacity-0");
     setTimeout(() => notification.remove(), 300);
   }, 5000);
 }
 
-// Resetta un campo input
-export function resetInput(inputId) {
+// Reset input
+function resetInput(inputId) {
   const input = document.getElementById(inputId);
   if (input) {
     input.value = "";
@@ -46,11 +38,20 @@ export function resetInput(inputId) {
   }
 }
 
-// Aggiorna le statistiche
-export function updateStats(stats) {
-  document.getElementById("totalUsersCount").textContent = stats.users;
-  document.getElementById("expiringSoonCount").textContent = stats.expiring_soon;
-  document.getElementById("expiredCount").textContent = stats.expired;
+function enableInputFields(fieldIds) {
+  fieldIds.forEach((id) => {
+    const field = document.getElementById(id);
+    field.disabled = false;
+    field.classList.remove("bg-gray-50", "text-gray-400", "cursor-not-allowed");
+  });
 }
 
+function disableInputFields(fieldIds) {
+  fieldIds.forEach((id) => {
+    const field = document.getElementById(id);
+    field.disabled = true;
+    field.classList.add("bg-gray-50", "text-gray-400", "cursor-not-allowed");
+  });
+}
 
+export { showNotification, resetInput, enableInputFields, disableInputFields };

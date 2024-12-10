@@ -1,7 +1,7 @@
 import { loadUsers } from "./users.js";
 import { setupEventListeners } from "./events.js";
 
-// Inizializzazione
+// Init
 document.addEventListener("DOMContentLoaded", () => {
   loadUsers();
   setupEventListeners();
