@@ -10,7 +10,7 @@ function install_dependencies {
     fi
 
     # venv activation
-    source "$APP_DIR/venv/bin/activate" 
+    source "$APP_DIR/.venv/bin/activate" 
 
     # install requirements
     if [[ -f "$APP_DIR/requirements.txt" ]]; then
