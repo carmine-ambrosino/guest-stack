@@ -2,16 +2,33 @@
 import { setCurrentUserId, setCurrentProjectUserId } from "./state.js";
 import { enableInputFields, disableInputFields } from "./utils.js";
 
-// toggle modal
-export function toggleModal(modalId, show) {
+let openModalsCount = 0;
+
+function areModalsOpen() {
+  return openModalsCount > 0;
+}
+
+function incrementOpenModals() {
+  openModalsCount++;
+}
+
+function decrementOpenModals() {
+  openModalsCount = Math.max(openModalsCount - 1, 0);
+}
+
+function toggleModal(modalId, show) {
   const modal = document.getElementById(modalId);
   if (modal) {
     modal.classList.toggle("hidden", !show);
+    if (show) {
+      incrementOpenModals();
+    } else {
+      decrementOpenModals();
+    }
   }
 }
 
-// open add modal
-export function openAddUserModal() {
+function openAddUserModal() {
   setCurrentUserId(null); // id reset for new user
   document.getElementById("modalTitle").textContent = "Add User";
   document.getElementById("userForm").reset();
@@ -19,8 +36,7 @@ export function openAddUserModal() {
   toggleModal("userModal", true);
 }
 
-// open edit modal
-export function openEditModal(user) {
+function openEditModal(user) {
   setCurrentUserId(user.id);
   document.getElementById("modalTitle").textContent = "Edit User";
 
@@ -41,15 +57,31 @@ export function openEditModal(user) {
   toggleModal("userModal", true);
 }
 
-//open delete modal
-export function openDeleteModal(userId) {
+function openDeleteModal(userId) {
   setCurrentUserId(userId);
   toggleModal("deleteModal", true);
 }
 
-// open add new project modal
-export function openProjectModal(userId) {
+function openProjectModal(userId) {
   setCurrentProjectUserId(userId);
   document.getElementById("projectForm").reset();
   toggleModal("projectModal", true);
 }
+
+function closeAllModals() {
+  ["userModal", "deleteModal", "projectModal"].forEach((modalId) =>
+    toggleModal(modalId, false)
+  );
+}
+
+export {
+  areModalsOpen,
+  incrementOpenModals,
+  decrementOpenModals,
+  toggleModal,
+  openAddUserModal,
+  openEditModal,
+  openDeleteModal,
+  openProjectModal,
+  closeAllModals,
+};

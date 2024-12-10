@@ -1,4 +1,5 @@
 // utils.js
+export { showNotification, resetInput, enableInputFields, disableInputFields };
 
 // show notification
 function showNotification(message, type = "info") {
@@ -38,20 +39,24 @@ function resetInput(inputId) {
   }
 }
 
-function enableInputFields(fieldIds) {
-  fieldIds.forEach((id) => {
-    const field = document.getElementById(id);
-    field.disabled = false;
-    field.classList.remove("bg-gray-50", "text-gray-400", "cursor-not-allowed");
-  });
-}
-
+// Disable input fields
 function disableInputFields(fieldIds) {
   fieldIds.forEach((id) => {
     const field = document.getElementById(id);
-    field.disabled = true;
-    field.classList.add("bg-gray-50", "text-gray-400", "cursor-not-allowed");
+    if (field) {
+      field.disabled = true;
+      field.classList.add("bg-gray-100", "text-gray-400");
+    }
   });
 }
 
-export { showNotification, resetInput, enableInputFields, disableInputFields };
+// enable input fields
+function enableInputFields(fieldIds) {
+  fieldIds.forEach((id) => {
+    const field = document.getElementById(id);
+    if (field) {
+      field.disabled = false;
+      field.classList.remove("bg-gray-100", "text-gray-400");
+    }
+  });
+}

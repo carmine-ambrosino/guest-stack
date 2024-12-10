@@ -9,6 +9,8 @@ import {
 } from "./modals.js";
 import { getCurrentUserId } from "./state.js";
 
+export { loadUsers, confirmDeleteUser, filterUserList };
+
 // Load users
 async function loadUsers() {
   try {
@@ -58,4 +60,11 @@ async function confirmDeleteUser() {
   }
 }
 
-export { loadUsers, confirmDeleteUser };
+function filterUserList() {
+  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
+  const users = document.querySelectorAll("#userList li");
+  users.forEach((user) => {
+    const userText = user.textContent.toLowerCase();
+    user.style.display = userText.includes(searchTerm) ? "" : "none";
+  });
+}

@@ -4,6 +4,8 @@ import { showNotification } from "./utils.js";
 import { toggleModal } from "./modals.js";
 import { getCurrentUserId, getCurrentProjectUserId } from "./state.js";
 
+export { handleUserFormSubmit, handleProjectFormSubmit };
+
 async function handleUserFormSubmit(event) {
   event.preventDefault();
   const user = {
@@ -53,4 +55,3 @@ async function handleProjectFormSubmit(event) {
   }
 }
 
-export { handleUserFormSubmit, handleProjectFormSubmit };

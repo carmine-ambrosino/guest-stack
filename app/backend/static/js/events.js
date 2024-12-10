@@ -1,53 +1,77 @@
-import { resetInput } from "./utils.js";
+import {
+  activateSearchMode,
+  handleSearchInput,
+  resetSearchInput,
+  blurSearchInput,
+  initializeSearchInput,
+  isTypingKey,
+} from "./search.js";
+import {
+  toggleModal,
+  openAddUserModal,
+  areModalsOpen,
+  closeAllModals,
+} from "./modals.js";
+import { loadUsers, confirmDeleteUser } from "./users.js";
 import { handleUserFormSubmit, handleProjectFormSubmit } from "./handlers.js";
-import { toggleModal, openAddUserModal } from "./modals.js";
-import { confirmDeleteUser, loadUsers } from "./users.js";
+// Se ci sono modali aperte, blocca tutto tranne ESC
+export { initializeApp };
 
-// setup event
+function initializeApp() {
+  loadUsers();
+  setupEventListeners();
+  initializeSearchInput();
+}
+
 function setupEventListeners() {
   document.addEventListener("keydown", handleKeyDown);
-  document
-    .getElementById("searchInput")
-    .addEventListener("input", filterUserList);
 
-  document
-    .getElementById("addUserButton")
-    .addEventListener("click", openAddUserModal);
-  document
-    .getElementById("userForm")
-    .addEventListener("submit", handleUserFormSubmit);
-  document
-    .getElementById("confirmDeleteButton")
-    .addEventListener("click", confirmDeleteUser);
-  document
-    .getElementById("projectForm")
-    .addEventListener("submit", handleProjectFormSubmit);
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("input", handleSearchInput);
+  }
+
+  const addUserButton = document.getElementById("addUserButton");
+  if (addUserButton) {
+    addUserButton.addEventListener("click", openAddUserModal);
+  }
+
+  const userForm = document.getElementById("userForm");
+  if (userForm) {
+    userForm.addEventListener("submit", handleUserFormSubmit);
+  }
+
+  const confirmDeleteButton = document.getElementById("confirmDeleteButton");
+  if (confirmDeleteButton) {
+    confirmDeleteButton.addEventListener("click", confirmDeleteUser);
+  }
+
+  const projectForm = document.getElementById("projectForm");
+  if (projectForm) {
+    projectForm.addEventListener("submit", handleProjectFormSubmit);
+  }
 
   setupModalCloseButtons();
 }
 
-// escape management
 function handleKeyDown(event) {
+  if (areModalsOpen()) {
+    if (event.key === "Escape") {
+      closeAllModals();
+    }
+    return;
+  }
+
   if (event.key === "Escape") {
-    ["userModal", "deleteModal", "projectModal"].forEach((modalId) =>
-      toggleModal(modalId, false)
-    );
-    resetInput("searchInput");
+    closeAllModals();
+    resetSearchInput();
+    blurSearchInput();
     loadUsers();
+  } else if (isTypingKey(event)) {
+    activateSearchMode();
   }
 }
 
-// filter user list
-function filterUserList() {
-  const searchTerm = document.getElementById("searchInput").value.toLowerCase();
-  const users = document.querySelectorAll("#userList li");
-  users.forEach((user) => {
-    const userText = user.textContent.toLowerCase();
-    user.style.display = userText.includes(searchTerm) ? "" : "none";
-  });
-}
-
-// modal close button setup
 function setupModalCloseButtons() {
   document
     .getElementById("cancelButton")
@@ -59,10 +83,3 @@ function setupModalCloseButtons() {
     .getElementById("cancelProjectButton")
     .addEventListener("click", () => toggleModal("projectModal", false));
 }
-
-export {
-  setupEventListeners,
-  handleKeyDown,
-  filterUserList,
-  setupModalCloseButtons,
-};
