@@ -60,23 +60,23 @@ export function createUserElement(user, onEdit, onDelete, onProjectChange) {
   statusContainer.className = "flex flex-col status-container items-start"; // Allinea il contenuto a destra
 
   const status = document.createElement("span");
-  status.className = "status text-sm rounded px-2 py-1 mb-4"; // Aggiungi margine inferiore per distanziare
+  status.className = "status text-sm rounded px-2 py-1 mb-4 ml-auto"; // Aggiungi margine inferiore per distanziare
   if (user.status === "active") {
     status.textContent = "🟢 Active";
-    status.classList.add("bg-green-200", "text-green-800", "font-bold", "ml-28");
+    status.classList.add("bg-green-200", "text-green-800", "font-bold");
   } else if (user.status === "expiring soon") {
     status.textContent = "🟡 Expiring Soon";
-    status.classList.add("bg-yellow-200", "text-yellow-800", "font-bold", "ml-14");
+    status.classList.add("bg-yellow-200", "text-yellow-800", "font-bold");
   } else {
     status.textContent = "🔴 Expired";
-    status.classList.add("bg-red-200", "text-red-800", "font-bold", "ml-24");
+    status.classList.add("bg-red-200", "text-red-800", "font-bold");
   }
 
   statusContainer.appendChild(status); // Aggiungi lo stato in cima
 
   // Crea il contenitore per i pulsanti (Modifica, Elimina, Cambia progetto)
   const actions = document.createElement("div");
-  actions.className = "flex-col px-2 py-1 ml-20 space-x-4"; // Disposizione verticale dei pulsanti
+  actions.className = "py-1 mt-2 ml-24 space-x-4"; // Disposizione verticale dei pulsanti
 
   // Pulsante per modificare
   const editButton = document.createElement("button");
@@ -86,35 +86,47 @@ export function createUserElement(user, onEdit, onDelete, onProjectChange) {
 
   // Pulsante per eliminare
   const deleteButton = document.createElement("button");
-  deleteButton.className = "delete-button text-red-500 hover:text-red-700";
+  deleteButton.className = "delete-button text-red-500 hover:text-red-700 ml-4";
   deleteButton.textContent = "❌";
   deleteButton.addEventListener("click", () => onDelete(user.id));
 
   // Pulsante per cambiare progetto
   const projectButton = document.createElement("button");
   projectButton.className = "project-button text-yellow-500 hover:text-yellow-700";
-  projectButton.textContent = " ➕ ";
+  projectButton.textContent = " 🆕📁";
   projectButton.addEventListener("click", () => onProjectChange(user.id));
 
   actions.appendChild(projectButton);
   actions.appendChild(editButton);
   actions.appendChild(deleteButton);
 
+  // Estrai la data e l'orario
+  const expiry_date = new Date(user.expiry_time);
+  const optionsDate = { year: 'numeric', month: 'long', day: 'numeric' };
+  const optionsTime = { hour: '2-digit', minute: '2-digit'};  
+
+  const date = expiry_date.toLocaleDateString([], optionsDate);
+  const time = expiry_date.toLocaleTimeString([], optionsTime);
+  
+  const date_p = document.createElement("p");
+  date_p.className = "font-bold";
+  date_p.textContent = `${date}`;
+  
+  const time_p = document.createElement("p");
+  time_p.textContent = `${time}`;
+  
+  const expiry_time = document.createElement("div");
+  expiry_time.className = "flex flex-col ml-auto items-end text-sm text-gray-500";
+  
+  expiry_time.appendChild(date_p);
+  expiry_time.appendChild(time_p);
+
+  statusContainer.appendChild(expiry_time);
+
+
   statusContainer.appendChild(actions); // Aggiungi i pulsanti sotto lo status
 
   li.appendChild(statusContainer); // Aggiungi il contenitore dello stato e dei pulsanti a destra
 
   return li;
-}
-
-// Funzione per generare il contenuto del modale utente
-export function populateUserModal(user) {
-  document.getElementById("username").value = user.username;
-  document.getElementById("email").value = user.email;
-  document.getElementById("project").value = user.project_name;
-  document.getElementById("role").value = user.role;
-
-  const expiryTime = new Date(user.expiry_time);
-  document.getElementById("expiryDate").value = expiryTime.toISOString().slice(0, 10);
-  document.getElementById("expiryClock").value = expiryTime.toISOString().slice(11, 16);
 }
