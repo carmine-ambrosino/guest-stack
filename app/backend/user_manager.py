@@ -110,110 +110,6 @@ class UserManager:
             logging.error(f"Error creating user: {e}")
             return {"error": "An internal error occurred", "details": str(e)}, 500
 
-    def update_user(self, user_id, **fields):
-        """
-        Aggiorna dinamicamente uno o più campi di un utente (email, progetto, ruolo, expiry_time).
-        """
-        if "username" in fields:
-            return {"error": "Username cannot be updated"}, 400
-        
-        is_valid, user_id = self.is_valid_user_id(user_id)
-        if not is_valid:
-            return {"error": "Invalid user ID"}, 400
-
-        with get_db_connection() as conn:
-            user = conn.execute(
-                "SELECT * FROM temporary_users WHERE id = ?",
-                (user_id,)
-            ).fetchone()
-
-            if not user:
-                return {"error": "User not found in the database"}, 404
-
-            update_operations = {
-                "email": lambda value: self._update_email(conn, user["openstack_user_id"], value),
-                "project": lambda value: self._update_project(conn, user["openstack_user_id"], value),
-                "role": lambda value: self._update_role(conn, user["openstack_user_id"], value, user["project_id"]),
-                "expiry_time": lambda value: self._update_expiry_time(conn, user["openstack_user_id"], value)
-            }
-
-            updated_fields = []
-            for field, value in fields.items():
-                try:
-                    if field == "email":
-                        self.validate_email(value)
-                    if field == "expiry_time":
-                        self.validate_expiry_time(value)
-                    update_operations[field](value)
-                    updated_fields.append(field)
-                except Exception as e:
-                    return {"error": f"Failed to update {field}: {str(e)}"}, 400
-
-            if updated_fields:
-                conn.commit()
-                return {"message": f"User updated successfully. Fields updated: {', '.join(updated_fields)}"}, 200
-
-            return {"error": "No valid fields provided for update"}, 400
-
-    def _update_email(self, conn, user_id, email):
-        conn.execute(
-            "UPDATE temporary_users SET email = ? WHERE openstack_user_id = ?",
-            (email, user_id)
-        )
-
-        user = self.keystone.users.get(user_id)
-        self.keystone.users.update(user, email=email)
-
-    def _update_project(self, conn, user_id, project_name):
-        try:
-            project = self.keystone.projects.find(name=project_name)
-        except Exception:
-            raise ValueError(f"Project '{project_name}' not found")
-
-        conn.execute(
-            "UPDATE temporary_users SET project_id = ?, project_name = ? WHERE openstack_user_id = ?",
-            (project.id, project_name, user_id)
-        )
-
-        user = self.keystone.users.get(user_id)
-        current_project_id = conn.execute(
-            "SELECT project_id FROM temporary_users WHERE openstack_user_id = ?",
-            (user_id,)
-        ).fetchone()[0]
-
-        if current_project_id:
-            current_project = self.keystone.projects.get(current_project_id)
-            current_roles = self.keystone.roles.list(user=user, project=current_project)
-
-            for role in current_roles:
-                self.keystone.roles.revoke(role=role, user=user, project=current_project)
-
-        role_obj = self.keystone.roles.find(name=conn.execute(
-            "SELECT role FROM temporary_users WHERE openstack_user_id = ?",
-            (user_id,)
-        ).fetchone()[0])
-
-        self.keystone.roles.grant(role=role_obj, user=user, project=project)
-
-    def _update_role(self, conn, user_id, role_name, project_id):
-        try:
-            role = self.keystone.roles.find(name=role_name)
-        except Exception:
-            raise ValueError(f"Role '{role_name}' not found")
-
-        conn.execute(
-            "UPDATE temporary_users SET role = ? WHERE openstack_user_id = ?",
-            (role_name, user_id)
-        )
-
-        user = self.keystone.users.get(user_id)
-        project = self.keystone.projects.get(project_id)
-
-        for current_role in self.keystone.roles.list(user=user, project=project):
-            self.keystone.roles.revoke(role=current_role, user=user, project=project)
-        self.keystone.roles.grant(role=role, user=user, project=project)
-
-    def _update_expiry_time(self, conn, user_id, expiry_time):
         expiry_time_utc = datetime.fromisoformat(expiry_time).astimezone(timezone.utc)
 
         conn.execute(
@@ -258,3 +154,136 @@ class UserManager:
             except Exception as e:
                 logging.error(f"Error deleting user: {e}")
                 return {"error": "An error occurred while deleting the user"}, 500
+
+    def _update_email(self, conn, user_id, email):
+        """
+        Aggiorna l'email dell'utente.
+        """
+        # Aggiorna l'email nel database locale
+        conn.execute(
+            "UPDATE temporary_users SET email = ? WHERE openstack_user_id = ?",
+            (email, user_id)
+        )
+
+        # Aggiorna l'email nell'utente OpenStack
+        user = self.keystone.users.get(user_id)
+        self.keystone.users.update(user, email=email)
+
+    def _update_role(self, conn, user_id, role_name, project_id):
+        """
+        Aggiorna il ruolo dell'utente nel progetto specificato.
+        """
+        # Trova il ruolo nel sistema OpenStack
+        role = self.keystone.roles.find(name=role_name)
+
+        # Ottieni l'utente e il progetto
+        user = self.keystone.users.get(user_id)
+        project = self.keystone.projects.get(project_id)
+
+        # Revoca tutti i ruoli attuali sull'utente nel progetto
+        current_roles = self.keystone.roles.list(user=user, project=project)
+        for current_role in current_roles:
+            self.keystone.roles.revoke(role=current_role, user=user, project=project)
+
+        # Assegna il nuovo ruolo all'utente nel progetto
+        self.keystone.roles.grant(role=role, user=user, project=project)
+
+        # Aggiorna il ruolo nel database
+        conn.execute(
+            "UPDATE temporary_users SET role = ? WHERE openstack_user_id = ?",
+            (role_name, user_id)
+        )
+
+
+    def _update_project_and_role(self, conn, user_id, project_name, role_name=None):
+        """
+        Aggiorna il progetto predefinito e il ruolo dell'utente.
+        Revoca l'accesso a tutti gli altri progetti.
+        """
+        try:
+            # Trova il progetto target
+            project = self.keystone.projects.find(name=project_name)
+        except Exception:
+            raise ValueError(f"Project '{project_name}' not found")
+
+        # Aggiorna il database con il nuovo progetto
+        conn.execute(
+            "UPDATE temporary_users SET project_id = ?, project_name = ? WHERE openstack_user_id = ?",
+            (project.id, project_name, user_id)
+        )
+
+        # Ottieni l'utente OpenStack
+        user = self.keystone.users.get(user_id)
+
+        # Imposta il progetto come predefinito
+        self.keystone.users.update(user=user, default_project=project)
+
+        # Revoca l'accesso a tutti gli altri progetti
+        all_projects = self.keystone.projects.list(user=user)
+        for other_project in all_projects:
+            if other_project.id != project.id:  # Salta il progetto target
+                current_roles = self.keystone.roles.list(user=user, project=other_project)
+                for role in current_roles:
+                    self.keystone.roles.revoke(role=role, user=user, project=other_project)
+
+        # Assegna il ruolo al nuovo progetto
+        if not role_name:
+            # Recupera il ruolo dal database se non specificato
+            role_name = conn.execute(
+                "SELECT role FROM temporary_users WHERE openstack_user_id = ?",
+                (user_id,)
+            ).fetchone()[0]
+
+        self._update_role(conn, user_id, role_name, project.id)
+
+
+    def _update_expiry_time(self, conn, user_id, expiry_time):
+        """
+        Aggiorna il tempo di scadenza dell'utente.
+        """
+        # Verifica che il tempo di scadenza sia valido
+        self.validate_expiry_time(expiry_time)
+
+        # Aggiorna il tempo di scadenza nel database
+        conn.execute(
+            "UPDATE temporary_users SET expiry_time = ? WHERE openstack_user_id = ?",
+            (expiry_time, user_id)
+        )
+
+    def update_user(self, user_id, email=None, project=None, role=None, expiry_time=None):
+        """
+        Aggiorna i campi di un utente (email, progetto, ruolo, expiry_time) in una singola operazione.
+        """
+        is_valid, user_id = self.is_valid_user_id(user_id)
+        if not is_valid:
+            return {"error": "Invalid user ID"}, 400
+
+        with get_db_connection() as conn:
+            # Recupera l'utente dal database
+            user = conn.execute(
+                "SELECT * FROM temporary_users WHERE id = ?",
+                (user_id,)
+            ).fetchone()
+
+            if not user:
+                return {"error": "User not found in the database"}, 404
+
+            try:
+                # Aggiorna email
+                if email:
+                    self._update_email(conn, user["openstack_user_id"], email)
+
+                # Aggiorna progetto e ruolo
+                if project:
+                    self._update_project_and_role(conn, user["openstack_user_id"], project, role)
+
+                # Aggiorna expiry_time
+                if expiry_time:
+                    self._update_expiry_time(conn, user["openstack_user_id"], expiry_time)
+
+                conn.commit()
+                return {"message": "User updated successfully"}, 200
+
+            except Exception as e:
+                conn.rollback()
+                return {"error": f"Failed to update user: {str(e)}"}, 400

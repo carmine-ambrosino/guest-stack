@@ -5,14 +5,9 @@ export function createUserElement(user, onEdit, onDelete) {
   li.className =
     "user-item flex items-start py-4 px-4 border-b border-gray-100 bg-gray-100 rounded-xl";
 
-  
   const avatar = createAvatar(user);
   const userInfo = createUserInfo(user);
-  const statusContainer = createStatusContainer(
-    user,
-    onEdit,
-    onDelete,
-  );
+  const statusContainer = createStatusContainer(user, onEdit, onDelete);
 
   li.appendChild(avatar);
   li.appendChild(userInfo);
