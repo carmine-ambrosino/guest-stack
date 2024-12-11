@@ -5,16 +5,14 @@ from config import Config
 from app.cleanup import cleanup_expired_users
 
 def run_scheduler():
-    """Funzione principale dello scheduler."""
     logging.info("Scheduler started.")
     
-    # Registra i task periodici
     schedule.every(Config.TIME_SCHED).minutes.do(cleanup_expired_users)
 
     try:
         while True:
             schedule.run_pending()
-            time.sleep(1)  # Frequenza del loop
+            time.sleep(1)  # Loop frequency
     except KeyboardInterrupt:
         logging.info("Scheduler interrupted.")
     except Exception as e:

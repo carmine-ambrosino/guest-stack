@@ -25,7 +25,6 @@ It enables the creation of temporary users with access to OpenStack, making the 
 enable_plugin guest-stack https://github.com/carmine-ambrosino/guest-stack.git main
 ```
 
-
 **3. Run stack.sh**
 ``` bash
 ./stack.sh
@@ -48,6 +47,5 @@ journalctl -u guest-stack -f
    ...
 TIME_SCHED = 2
 ```
-
 
 * **Development Mode:** This plugin is in development mode and should not be used in production environments.

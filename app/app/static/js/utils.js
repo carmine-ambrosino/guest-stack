@@ -71,7 +71,7 @@ async function populateSelects(defaultProject = "", defaultRole = "") {
     }
   };
 
-  // helper per
+  // helper for populate select
   const populateSelect = (select, items, defaultValue) => {
     const fragment = document.createDocumentFragment(); // no reflow
 

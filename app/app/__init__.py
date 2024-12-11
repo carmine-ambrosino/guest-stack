@@ -8,7 +8,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # Registra i Blueprint
+    # Register Blueprint
     app.register_blueprint(api_bp)
     app.register_blueprint(openstack_bp)
     app.register_blueprint(users_bp)

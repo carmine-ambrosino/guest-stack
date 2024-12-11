@@ -60,7 +60,6 @@ class UserManager:
 
 
     def create_user(self, username, expiry_time, email, project, role):
-        # Validazioni centralizzate
         validators = [
             lambda: self.validate_username(username),
             lambda: self.validate_email(email),
@@ -78,7 +77,6 @@ class UserManager:
         password = self.generate_random_password()
 
         try:
-            # Creazione utente e assegnazione ruoli
             project_obj = self.keystone.projects.find(name=project)
             role_obj = self.keystone.roles.find(name=role)
             user = self.keystone.users.create(
@@ -90,7 +88,6 @@ class UserManager:
             )
             self.keystone.roles.grant(role=role_obj, user=user, project=project_obj)
 
-            # Salvataggio nel database
             with get_db_connection() as conn:
                 conn.execute(
                     """
@@ -102,7 +99,7 @@ class UserManager:
                 )
                 conn.commit()
 
-            # Log della password
+            # Password Log
             logging.info("----------------------------------------------------------------")
             logging.info(f"Generated password for user {username}: {password}")
             logging.info("----------------------------------------------------------------")
@@ -158,39 +155,27 @@ class UserManager:
                 return {"error": "An error occurred while deleting the user"}, 500
 
     def _update_email(self, conn, user_id, email):
-        """
-        Aggiorna l'email dell'utente.
-        """
-        # Aggiorna l'email nel database locale
+        
         conn.execute(
             "UPDATE temporary_users SET email = ? WHERE openstack_user_id = ?",
             (email, user_id)
         )
 
-        # Aggiorna l'email nell'utente OpenStack
         user = self.keystone.users.get(user_id)
         self.keystone.users.update(user, email=email)
 
     def _update_role(self, conn, user_id, role_name, project_id):
-        """
-        Aggiorna il ruolo dell'utente nel progetto specificato.
-        """
-        # Trova il ruolo nel sistema OpenStack
         role = self.keystone.roles.find(name=role_name)
 
-        # Ottieni l'utente e il progetto
         user = self.keystone.users.get(user_id)
         project = self.keystone.projects.get(project_id)
 
-        # Revoca tutti i ruoli attuali sull'utente nel progetto
         current_roles = self.keystone.roles.list(user=user, project=project)
         for current_role in current_roles:
             self.keystone.roles.revoke(role=current_role, user=user, project=project)
 
-        # Assegna il nuovo ruolo all'utente nel progetto
         self.keystone.roles.grant(role=role, user=user, project=project)
 
-        # Aggiorna il ruolo nel database
         conn.execute(
             "UPDATE temporary_users SET role = ? WHERE openstack_user_id = ?",
             (role_name, user_id)
@@ -198,39 +183,28 @@ class UserManager:
 
 
     def _update_project_and_role(self, conn, user_id, project_name, role_name=None):
-        """
-        Aggiorna il progetto predefinito e il ruolo dell'utente.
-        Revoca l'accesso a tutti gli altri progetti.
-        """
         try:
-            # Trova il progetto target
             project = self.keystone.projects.find(name=project_name)
         except Exception:
             raise ValueError(f"Project '{project_name}' not found")
 
-        # Aggiorna il database con il nuovo progetto
         conn.execute(
             "UPDATE temporary_users SET project_id = ?, project_name = ? WHERE openstack_user_id = ?",
             (project.id, project_name, user_id)
         )
 
-        # Ottieni l'utente OpenStack
         user = self.keystone.users.get(user_id)
 
-        # Imposta il progetto come predefinito
         self.keystone.users.update(user=user, default_project=project)
 
-        # Revoca l'accesso a tutti gli altri progetti
         all_projects = self.keystone.projects.list(user=user)
         for other_project in all_projects:
-            if other_project.id != project.id:  # Salta il progetto target
+            if other_project.id != project.id:  
                 current_roles = self.keystone.roles.list(user=user, project=other_project)
                 for role in current_roles:
                     self.keystone.roles.revoke(role=role, user=user, project=other_project)
 
-        # Assegna il ruolo al nuovo progetto
         if not role_name:
-            # Recupera il ruolo dal database se non specificato
             role_name = conn.execute(
                 "SELECT role FROM temporary_users WHERE openstack_user_id = ?",
                 (user_id,)
@@ -262,15 +236,11 @@ class UserManager:
 
 
     def update_user(self, user_id, email=None, project=None, role=None, expiry_time=None):
-        """
-        Aggiorna i campi di un utente (email, progetto, ruolo, expiry_time) in una singola operazione.
-        """
         is_valid, user_id = self.is_valid_user_id(user_id)
         if not is_valid:
             return {"error": "Invalid user ID"}, 400
 
         with get_db_connection() as conn:
-            # Recupera l'utente dal database
             user = conn.execute(
                 "SELECT * FROM temporary_users WHERE id = ?",
                 (user_id,)
@@ -280,15 +250,12 @@ class UserManager:
                 return {"error": "User not found in the database"}, 404
 
             try:
-                # Aggiorna email
                 if email:
                     self._update_email(conn, user["openstack_user_id"], email)
 
-                # Aggiorna progetto e ruolo
                 if project:
                     self._update_project_and_role(conn, user["openstack_user_id"], project, role)
 
-                # Aggiorna expiry_time
                 if expiry_time:
                     self._update_expiry_time(conn, user["openstack_user_id"], expiry_time)
 
@@ -301,14 +268,13 @@ class UserManager:
 
     def load_users(self):
         try:
-            # Ottieni la lista temporanea di utenti
             users = self.get_temp_users()
         except Exception as e:
-            logging.info(f"Errore durante il recupero degli utenti temporanei: {e}")
+            logging.info(f"Error fetch temp users: {e}")
             return []
 
         if not users:
-            logging.info("Nessun utente trovato nella lista temporanea.")
+            logging.info("No temp user.")
             return []
 
         for user in users:
@@ -316,7 +282,7 @@ class UserManager:
             keystone_user_id = user.get('openstack_user_id')
 
             if not temp_user_id or not keystone_user_id:
-                logging.info(f"ID utente mancante per un elemento della lista: {user}")
+                logging.info(f"Missing ID: {user}")
                 continue
 
             self._synchronize_user_with_keystone(user, temp_user_id, keystone_user_id)
@@ -324,18 +290,14 @@ class UserManager:
         return [dict(user) for user in users]
 
     def _synchronize_user_with_keystone(self, user, temp_user_id, keystone_user_id):
-        """
-        Sincronizza i dati di un utente temporaneo con Keystone.
-        """
         try:
             keystone_user = self._fetch_keystone_user(keystone_user_id)
         except Exception as e:
-            logging.info(f"Errore durante il recupero dell'utente {keystone_user_id} da Keystone: {e}")
+            logging.info(f"Error fetch user with {keystone_user_id} from Keystone: {e}")
             return
 
         update_needed = False
 
-        # Confronta e aggiorna email, progetto e username
         update_needed |= self._update_user_email_if_needed(user, keystone_user)
         update_needed |= self._update_user_project_if_needed(user, keystone_user)
         update_needed |= self._update_user_username_if_needed(user, keystone_user)
@@ -344,22 +306,16 @@ class UserManager:
             self._persist_user_updates(user, temp_user_id)
 
     def _fetch_keystone_user(self, keystone_user_id):
-        """
-        Recupera un utente da Keystone.
-        """
         try:
             return self.keystone.users.get(keystone_user_id)
         except KeyError:
-            logging.info(f"Utente con OpenStack ID {keystone_user_id} non trovato in Keystone.")
+            logging.info(f"User with OpenStack ID {keystone_user_id} not found in Keystone.")
             raise
 
     def _update_user_email_if_needed(self, user, keystone_user):
-        """
-        Aggiorna l'email dell'utente se necessario.
-        """
         if keystone_user.email and keystone_user.email != user.get('email'):
             logging.info(
-                f"Aggiornamento email per utente con OpenStack ID {keystone_user.id}: "
+                f"Update email for user with OpenStack ID {keystone_user.id}: "
                 f"{keystone_user.email} -> {user.get('email')}"
             )
             user['email'] = keystone_user.email
@@ -367,9 +323,6 @@ class UserManager:
         return False
 
     def _update_user_project_if_needed(self, user, keystone_user):
-            """
-            Aggiorna il progetto dell'utente se necessario.
-            """
             keystone_project_id = getattr(keystone_user, 'default_project_id', None)
             keystone_project_name = None
 
@@ -378,14 +331,14 @@ class UserManager:
                     keystone_project = self.keystone.projects.get(keystone_project_id)
                     keystone_project_name = keystone_project.name
                 except Exception as e:
-                    logging.info(f"Errore durante il recupero del progetto con ID {keystone_project_id}: {e}")
+                    logging.info(f"Error fetch project ID {keystone_project_id}: {e}")
 
             if keystone_project_name and (
                 keystone_project_name != user.get('project_name') or
                 keystone_project_id != user.get('project_id')
             ):
                 logging.info(
-                    f"Aggiornamento progetto per utente con OpenStack ID {keystone_user.id}: "
+                    f"Update project for user with OpenStack ID {keystone_user.id}: "
                     f"{keystone_project_name} ({keystone_project_id}) -> "
                     f"{user.get('project_name')} ({user.get('project_id')})"
                 )
@@ -396,12 +349,9 @@ class UserManager:
             return False
  
     def _update_user_username_if_needed(self, user, keystone_user):
-        """
-        Aggiorna l'username dell'utente se necessario.
-        """
         if keystone_user.name and keystone_user.name != user.get('username'):
             logging.info(
-                f"Aggiornamento username per utente con OpenStack ID {keystone_user.id}: "
+                f"Update username user with OpenStack ID {keystone_user.id}: "
                 f"{keystone_user.name} -> {user.get('username')}"
             )
             user['username'] = keystone_user.name
@@ -409,9 +359,6 @@ class UserManager:
         return False
 
     def _persist_user_updates(self, user, temp_user_id):
-        """
-        Salva le modifiche dell'utente nel database.
-        """
         try:
             with get_db_connection() as conn:
                 conn.execute(
@@ -430,6 +377,6 @@ class UserManager:
                 )
                 conn.commit()
         except Exception as e:
-            logging.info(f"Errore durante il salvataggio dell'utente con ID {temp_user_id}: {e}")
+            logging.info(f"Error during save user with ID {temp_user_id}: {e}")
 
 

@@ -8,7 +8,7 @@ def get_db_connection():
 
 def initialize_database():
     """
-    Inizializza il database, creando la tabella `temporary_users` se non esiste già.
+    Init database: create `temporary_users` if not exist.
     """
     with get_db_connection() as conn:
         cursor = conn.cursor()

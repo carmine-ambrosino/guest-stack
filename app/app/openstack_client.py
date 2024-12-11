@@ -3,9 +3,6 @@ from keystoneclient.v3 import client
 
 
 def get_keystone_client(auth_url, username, password, user_domain_name, project_name, project_domain_name):
-    """
-    Ottiene un'istanza del client Keystone configurata con le credenziali fornite.
-    """
     loader = loading.get_plugin_loader('password')
     auth = loader.load_from_options(
         auth_url=auth_url,
