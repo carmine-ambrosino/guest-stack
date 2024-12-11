@@ -38,7 +38,6 @@ def cleanup_expired_users():
                     (user["id"],)
                 )
                 conn.commit()
-                #logging.info(f"Deleted user from database: {user['username']} (Openstack ID: {user['openstack_user_id']})")
             except Exception as e:
                 logging.info(f"Error deleting user {user['username']}): {e}")
 

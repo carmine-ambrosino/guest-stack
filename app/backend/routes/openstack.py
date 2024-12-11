@@ -18,7 +18,6 @@ def openstack_projects_roles_api():
         user_domain_name = Config.OPENSTACK["user_domain_name"]
         project_name = Config.OPENSTACK["project_name"]
         project_domain_name = Config.OPENSTACK["project_domain_name"]
-        logging.info(f"AUTH URL {auth_url}")
         
         # get keyston client
         keystone = get_keystone_client(
