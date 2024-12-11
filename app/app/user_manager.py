@@ -298,3 +298,139 @@ class UserManager:
             except Exception as e:
                 conn.rollback()
                 return {"error": f"Failed to update user: {str(e)}"}, 400
+
+    def load_users(self):
+        try:
+            # Ottieni la lista temporanea di utenti
+            users = self.get_temp_users()
+            logging.info(f"User: {users}")
+        except Exception as e:
+            logging.info(f"Errore durante il recupero degli utenti temporanei: {e}")
+            return []
+
+        if not users:
+            logging.info("Nessun utente trovato nella lista temporanea.")
+            return []
+
+        for user in users:
+            temp_user_id = user.get('id')
+            keystone_user_id = user.get('openstack_user_id')
+
+            if not temp_user_id or not keystone_user_id:
+                logging.info(f"ID utente mancante per un elemento della lista: {user}")
+                continue
+
+            self._synchronize_user_with_keystone(user, temp_user_id, keystone_user_id)
+
+        return [dict(user) for user in users]
+
+    def _synchronize_user_with_keystone(self, user, temp_user_id, keystone_user_id):
+        """
+        Sincronizza i dati di un utente temporaneo con Keystone.
+        """
+        try:
+            keystone_user = self._fetch_keystone_user(keystone_user_id)
+        except Exception as e:
+            logging.info(f"Errore durante il recupero dell'utente {keystone_user_id} da Keystone: {e}")
+            return
+
+        update_needed = False
+
+        # Confronta e aggiorna email, progetto e username
+        update_needed |= self._update_user_email_if_needed(user, keystone_user)
+        update_needed |= self._update_user_project_if_needed(user, keystone_user)
+        update_needed |= self._update_user_username_if_needed(user, keystone_user)
+
+        if update_needed:
+            self._persist_user_updates(user, temp_user_id)
+
+    def _fetch_keystone_user(self, keystone_user_id):
+        """
+        Recupera un utente da Keystone.
+        """
+        try:
+            return self.keystone.users.get(keystone_user_id)
+        except KeyError:
+            logging.info(f"Utente con OpenStack ID {keystone_user_id} non trovato in Keystone.")
+            raise
+
+    def _update_user_email_if_needed(self, user, keystone_user):
+        """
+        Aggiorna l'email dell'utente se necessario.
+        """
+        if keystone_user.email and keystone_user.email != user.get('email'):
+            logging.info(
+                f"Aggiornamento email per utente con OpenStack ID {keystone_user.id}: "
+                f"{keystone_user.email} -> {user.get('email')}"
+            )
+            user['email'] = keystone_user.email
+            return True
+        return False
+
+    def _update_user_project_if_needed(self, user, keystone_user):
+            """
+            Aggiorna il progetto dell'utente se necessario.
+            """
+            keystone_project_id = getattr(keystone_user, 'default_project_id', None)
+            keystone_project_name = None
+
+            if keystone_project_id:
+                try:
+                    keystone_project = self.keystone.projects.get(keystone_project_id)
+                    keystone_project_name = keystone_project.name
+                except Exception as e:
+                    logging.info(f"Errore durante il recupero del progetto con ID {keystone_project_id}: {e}")
+
+            if keystone_project_name and (
+                keystone_project_name != user.get('project_name') or
+                keystone_project_id != user.get('project_id')
+            ):
+                logging.info(
+                    f"Aggiornamento progetto per utente con OpenStack ID {keystone_user.id}: "
+                    f"{keystone_project_name} ({keystone_project_id}) -> "
+                    f"{user.get('project_name')} ({user.get('project_id')})"
+                )
+                user['project_name'] = keystone_project_name
+                user['project_id'] = keystone_project_id
+                return True
+
+            return False
+ 
+    def _update_user_username_if_needed(self, user, keystone_user):
+        """
+        Aggiorna l'username dell'utente se necessario.
+        """
+        if keystone_user.name and keystone_user.name != user.get('username'):
+            logging.info(
+                f"Aggiornamento username per utente con OpenStack ID {keystone_user.id}: "
+                f"{keystone_user.name} -> {user.get('username')}"
+            )
+            user['username'] = keystone_user.name
+            return True
+        return False
+
+    def _persist_user_updates(self, user, temp_user_id):
+        """
+        Salva le modifiche dell'utente nel database.
+        """
+        try:
+            with get_db_connection() as conn:
+                conn.execute(
+                    """
+                    UPDATE temporary_users
+                    SET email = ?, project_name = ?, project_id = ?, username = ?
+                    WHERE id = ?
+                    """,
+                    (
+                        user['email'],
+                        user['project_name'] or "Unknown Project",
+                        user['project_id'],
+                        user['username'],
+                        temp_user_id,
+                    ),
+                )
+                conn.commit()
+        except Exception as e:
+            logging.info(f"Errore durante il salvataggio dell'utente con ID {temp_user_id}: {e}")
+
+

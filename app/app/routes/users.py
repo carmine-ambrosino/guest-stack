@@ -38,7 +38,7 @@ def update_user_api(user_id):
 
 @users_bp.route('/users', methods=['GET'])
 def get_users_api():
-    users = user_manager.get_temp_users()
+    users = user_manager.load_users()
     today = datetime.now().date()
 
     # Add 'status' for each users
@@ -64,12 +64,6 @@ def get_users_api():
 
     return jsonify(response), 200
 
-@users_bp.route('/users/<user_id>', methods=['GET'])
-def get_user(user_id):
-    user = user_manager.get_temp_users_by_id(user_id)
-    if user is None:
-        return jsonify({"error": "User not found"}), 404  
-    return jsonify(user), 200
 
 @users_bp.route('/users/<user_id>', methods=['DELETE'])
 def delete_user_api(user_id):
