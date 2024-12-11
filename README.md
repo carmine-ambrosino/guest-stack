@@ -25,9 +25,7 @@ enable_plugin guest-stack https://github.com/carmine-ambrosino/guest-stack.git m
 
 **3. Run stack.sh**
 ``` bash
-./stack.sh* Temporary users password
-* Scheduler time
-* Development mode
+./stack.sh
 ```
 
 **4. Test guest-stack**
