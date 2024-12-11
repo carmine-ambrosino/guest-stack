@@ -6,6 +6,7 @@ export {
   enableInputFields,
   disableInputFields,
   populateSelects,
+  setCurrentDate
 };
 
 // show notification
@@ -101,4 +102,16 @@ async function populateSelects(defaultProject = "", defaultRole = "") {
     .catch((error) => {
       console.error("Error populating selects:", error);
     });
+}
+
+// Function to set the current date in ISO format (YYYY-MM-DD) in a given input field
+function setCurrentDate(inputId) {
+  // Get the current date
+  const today = new Date();
+  
+  // Format the date to ISO format (YYYY-MM-DD), excluding the time
+  const formattedDate = today.toISOString().split('T')[0]; // Split by 'T' and take the date part
+  
+  // Set the formatted date in the input field with the given inputId
+  document.getElementById(inputId).value = formattedDate;
 }

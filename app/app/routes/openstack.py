@@ -30,11 +30,13 @@ def openstack_projects_roles_api():
         
         # project list
         projects = [project.name for project in keystone.projects.list()]
-        
+        projects = sorted(projects, key=lambda x: (x.lower(), x))
+
         # role list
         roles = [role.name for role in keystone.roles.list()]
-        
-        return jsonify({"projects": projects.sort(), "roles": roles.sort()})
+        roles = sorted(roles, key=lambda x: (x.lower(), x))
+
+        return jsonify({"projects": projects, "roles": roles})
     
     except Exception as e:
         # Gestione degli errori

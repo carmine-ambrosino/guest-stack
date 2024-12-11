@@ -1,7 +1,7 @@
 // modals.js
 import { setCurrentUserId } from "./state.js";
 import { enableInputFields, disableInputFields } from "./utils.js";
-import { populateSelects } from "./utils.js";
+import { populateSelects, setCurrentDate } from "./utils.js";
 
 let openModalsCount = 0;
 
@@ -45,6 +45,7 @@ function openAddUserModal() {
   document.getElementById("modalTitle").textContent = "Add User";
   document.getElementById("userForm").reset();
   enableInputFields(["username"]);
+  setCurrentDate("expiryDate");
 
   populateSelects().then(() => {
     toggleModal("userModal", true);

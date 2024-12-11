@@ -35,6 +35,6 @@ async function handleUserFormSubmit(event) {
     loadUsers();
   } catch (error) {
     console.error("Error saving user:", error);
-    showNotification("Failed to save user. Please try again.", "error");
+    showNotification("Error: Check fields EMAIL and USERNAME (must be 3+ characters).", "error");
   }
 }
