@@ -303,7 +303,6 @@ class UserManager:
         try:
             # Ottieni la lista temporanea di utenti
             users = self.get_temp_users()
-            logging.info(f"User: {users}")
         except Exception as e:
             logging.info(f"Errore durante il recupero degli utenti temporanei: {e}")
             return []
