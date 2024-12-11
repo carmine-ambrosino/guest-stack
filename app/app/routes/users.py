@@ -1,11 +1,10 @@
 from flask import Blueprint, jsonify, request
-from backend.user_manager import UserManager
+from app.user_manager import UserManager
 from datetime import datetime
 from config import Config
 
 user_manager = UserManager(**Config.OPENSTACK)
 
-# Definizione del Blueprint per le route degli utenti
 users_bp = Blueprint('users', __name__, url_prefix=Config.API_PREFIX)
 
 @users_bp.route('/users', methods=['POST'])
@@ -50,12 +49,10 @@ def get_users_api():
             'expired' if expiry_date < today else
             'active'
         )
-
-    # Calcola le statistiche
+    
     expiring_soon = sum(1 for user in users if user['status'] == 'expiring soon')
     expired = sum(1 for user in users if user['status'] == 'expired')
 
-    # Crea la risposta finale
     response = {
         "users": users,
         "stats": {

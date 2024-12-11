@@ -2,7 +2,7 @@ from multiprocessing import Process
 import signal
 import logging
 import sys
-from backend.app import app
+from app.app import app
 from config import Config
 from scheduler.scheduler import run_scheduler
 

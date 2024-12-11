@@ -1,7 +1,6 @@
-
 from flask import Blueprint, jsonify, request
 from config import Config
-from backend.openstack_client import get_keystone_client
+from app.openstack_client import get_keystone_client
 import logging
 
 

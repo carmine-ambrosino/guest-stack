@@ -3,7 +3,7 @@ Guest-stack is an OpenStack plugin designed to facilitate the temporary manageme
 This plugin enables the creation of temporary users with access to OpenStack.
 
 ## Preview
-![](./app/backend/static/images/guest-stack.png)
+![](./app/app/static/images/guest-stack.png)
 
 ## Features
 * **Temporary User Creation:** This feature allows for the straightforward creation of temporary users with access to OpenStack.

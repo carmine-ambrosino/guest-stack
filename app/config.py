@@ -2,7 +2,7 @@ class Config:
     API_PREFIX = "/api/v1"
     
     # Database configuration
-    DATABASE_URI = "backend/db/temporary_users.db"
+    DATABASE_URI = "app/db/temporary_users.db"
 
     # OpenStack configuration
     OPENSTACK = {

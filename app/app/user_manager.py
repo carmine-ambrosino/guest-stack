@@ -3,8 +3,8 @@ import secrets
 import string
 import logging
 from datetime import datetime, timezone
-from backend.openstack_client import get_keystone_client
-from backend.db.db import get_db_connection
+from app.openstack_client import get_keystone_client
+from app.db.db import get_db_connection
 
 class UserManager:
     EMAIL_REGEX = re.compile(r"^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$")
@@ -241,16 +241,25 @@ class UserManager:
 
     def _update_expiry_time(self, conn, user_id, expiry_time):
         """
-        Aggiorna il tempo di scadenza dell'utente.
+        Update expiry time and description
         """
-        # Verifica che il tempo di scadenza sia valido
+
         self.validate_expiry_time(expiry_time)
 
-        # Aggiorna il tempo di scadenza nel database
         conn.execute(
             "UPDATE temporary_users SET expiry_time = ? WHERE openstack_user_id = ?",
             (expiry_time, user_id)
         )
+
+        expiry_time_utc = datetime.fromisoformat(expiry_time).astimezone(timezone.utc)
+
+        user = self.keystone.users.get(user_id)
+
+        # update description
+        self.keystone.users.update(
+            user, description=f"Temporary user expiring on {expiry_time_utc.isoformat()}"
+        )
+
 
     def update_user(self, user_id, email=None, project=None, role=None, expiry_time=None):
         """
