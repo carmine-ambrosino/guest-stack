@@ -60,7 +60,7 @@ function enableInputFields(fieldIds) {
 }
 
 //populate selects
-async function populateSelects(defaultProject = "", defaultRole = "") {
+async function populateSelects(defaultProject = "demo", defaultRole = "member") {
   const projectSelect = document.getElementById("project");
   const roleSelect = document.getElementById("role");
 
