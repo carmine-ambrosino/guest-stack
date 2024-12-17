@@ -9,6 +9,10 @@
 
 # Ignore pycache
 app/__pycache__
+app/app/__pycache__
+app/app/db/__pycache__
+app/app/routes/__pycache__
+app/scheduler/__pycache__
 
 # Ignore DS_Store file
 *.DS_Store
